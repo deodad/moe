@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --background: #f7f6f1;
+  --foreground: #1c1917;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-geist), Arial, sans-serif; }
+button, textarea { font: inherit; }
+
+@layer components {
+  .nav-item {
+    @apply flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-emerald-50/65 transition hover:bg-white/5 hover:text-white;
+  }
+  .nav-item svg { @apply size-4; }
+  .nav-item-active { @apply bg-white/10 text-white; }
+  .mobile-nav { @apply flex cursor-pointer flex-col items-center justify-center gap-1 text-[10px] font-semibold text-stone-400; }
+  .mobile-nav svg { @apply size-4; }
+}
+
+::selection { background: #bbf7d0; color: #14532d; }
