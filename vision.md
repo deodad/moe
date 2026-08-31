@@ -1,10 +1,10 @@
 # Maintenance of Everything
 
-The internet knows how to care for almost anything, but owning a house, car, appliance, bike, or machine still means repeatedly searching manuals, videos, forums, and old receipts.
+Much of life is taking responsibility for what we hope will continue: homes, machines, gardens, practices, relationships, communities, and institutions. Keeping them going requires memory, attention, knowledge, and adaptation, but that work is fragmented and easy to defer.
 
-**Maintenance of Everything is a personal agent for taking care of the physical things in your life.**
+**Maintenance of Everything is a personal agent for keeping what matters going.**
 
-You talk to it like ChatGPT. Over time it learns what you own, remembers what happened, researches what matters, and helps the right maintenance happen at the right time.
+It begins with the physical things in your life. You talk to it like ChatGPT. Over time it learns what you own, remembers what happened, researches what matters, notices change, and helps turn attention into timely care.
 
 ```mermaid
 flowchart TD
@@ -15,7 +15,17 @@ flowchart TD
     M --> C
 ```
 
-The bet is simple: **do not make the user operate a database about their possessions. Give an agent a durable memory of their physical world and let it help take care of it.**
+The bet is simple: **responsibility becomes more capable when it has memory. Do not make the user operate a database about their possessions. Give an agent a durable understanding of their physical world and let it help keep that world going.**
+
+## Mission and wedge
+
+The mission is broader than possessions. Maintenance is the whole practice of keeping something going: preserving useful continuity, noticing deterioration, repairing damage, and adapting as circumstances change. Moe should help make responsibility less forgetful and more capable without creating work for its own sake.
+
+The product wedge is physical Things. Houses, vehicles, appliances, tools, and machines give the prototype observable identity, history, condition, failure, guidance, and completed work. They let us test whether durable agent memory produces better care without first solving every kind of responsibility.
+
+Other domains may eventually belong in the product, including gardens, practices, relationships, communities, and institutions. That possibility does not make them Things in the current model. A relationship is not an asset, another person's perspective is not canonical state, and sensitive forms of care will need their own product judgment, consent boundaries, and representations.
+
+**Keep the mission broad and the first product concrete.** Moe is not a generic everything assistant; it is an agent for continuity, beginning with the physical world.
 
 ## The product
 

@@ -8,7 +8,7 @@ const mono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Maintenance of Everything",
-  description: "A personal agent for taking care of the physical things in your life.",
+  description: "A personal agent for keeping what matters going, beginning with the physical things in your life.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

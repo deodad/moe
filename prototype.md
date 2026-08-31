@@ -12,13 +12,19 @@ build → use → notice → change → use
 
 Optimize for **days-to-learning**, code readability, and ease of modification by Codex.
 
+## Mission and prototype wedge
+
+The broader mission is to help people keep what matters going. This prototype begins with physical Things because their identity, history, condition, and maintenance are concrete enough to test that idea end to end.
+
+Do not generalize the prototype around every possible kind of responsibility. People, relationships, practices, communities, and institutions are not Things in the current model. Their place in the mission is a future product question, not a reason to add generic entities or vague agent capabilities now.
+
 ---
 
 # What we're trying to learn
 
 The core question:
 
-**Does a ChatGPT-like agent that remembers your Things and mediates maintenance feel meaningfully better than generic chat/search?**
+**Does a ChatGPT-like agent that remembers your physical Things and mediates their care feel meaningfully better than generic chat/search?**
 
 The prototype should let us experience:
 

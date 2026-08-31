@@ -1,6 +1,6 @@
 # Maintenance of Everything
 
-A local learning prototype for a personal agent that remembers physical Things and mediates their maintenance. The product has three surfaces—Chat, Things, and Maintenance—backed by the same durable application tools.
+A local learning prototype for a personal agent that helps keep what matters going. The first product wedge is physical Things: Moe remembers their history and mediates their care across Chat, Things, and Maintenance using the same durable application tools.
 
 ## Requirements
 
