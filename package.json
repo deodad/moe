@@ -21,7 +21,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.542.0",
-    "nanocodex": "https://pkg.pr.new/gakonst/nanocodex/nanocodex@23c557ea8282a3336175fd79742e88d06a709ea2",
+    "nanocodex": "https://pkg.pr.new/nanocodex@e54f545",
     "next": "16.3.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",

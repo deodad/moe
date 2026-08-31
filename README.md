@@ -21,7 +21,7 @@ Environment variables:
 - `OPENAI_API_KEY` — required; used only by the Node server.
 - `MOE_ACCESS_PASSWORD` — required in production; protects every application page and API endpoint with an HTTPS Basic Auth challenge.
 - `MOE_ACCESS_USERNAME` — optional; defaults to `moe`.
-- `NANOCODEX_MODEL` — optional conversation model; defaults to `gpt-5.6-luna` and also accepts `gpt-5.6-terra` or `gpt-5.6-sol`. Web searches currently always use `gpt-5.6-terra`.
+- `NANOCODEX_MODEL` — optional conversation model; defaults to `gpt-5.6-luna` and also accepts `gpt-5.6-terra` or `gpt-5.6-sol`. Web searches inherit the model that invoked the tool.
 - `OPENAI_API_BASE_URL` — optional OpenAI API base URL; defaults to `https://api.openai.com/v1`.
 - `MOE_DATABASE_PATH` — optional SQLite path; defaults to `data/moe.db`.
 - `NANOCODEX_WEBSOCKET_URL` and `MOE_NEXT_DIST_DIR` — test-harness overrides; leave unset for normal local use.
