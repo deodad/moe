@@ -4,6 +4,12 @@ Read `vision.md` and `prototype.md` before making significant product or impleme
 
 This is a disposable learning prototype. Prefer the simplest implementation that lets us test the product, keep important code obvious, and avoid premature abstraction.
 
+## Git workflow
+
+Work directly on `main`. Do not create feature branches or pull requests for this repository.
+
+Before starting work, pull the latest `origin/main`. When a change is complete and verified, commit it with a conventional commit message and push it directly to `origin/main`.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
