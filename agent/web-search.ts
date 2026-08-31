@@ -3,6 +3,7 @@ import { web } from "nanocodex/tools";
 type WebSearchRequest = {
   commands: Record<string, unknown>;
   session_id: string;
+  model: string;
 };
 
 type WebSearchOptions = {
@@ -11,7 +12,6 @@ type WebSearchOptions = {
 };
 
 const MAX_RESPONSE_BYTES = 1024 * 1024;
-export const WEB_SEARCH_MODEL = "gpt-5.6-terra";
 
 export class WebSearchError extends Error {
   constructor(
@@ -33,9 +33,13 @@ function request(input: unknown): WebSearchRequest {
   if (typeof value.session_id !== "string" || !value.session_id.trim()) {
     throw new WebSearchError("Invalid web search session.", 400);
   }
+  if (typeof value.model !== "string" || !value.model.trim()) {
+    throw new WebSearchError("Invalid web search model.", 400);
+  }
   return {
     commands: value.commands as Record<string, unknown>,
     session_id: value.session_id,
+    model: value.model,
   };
 }
 
@@ -55,7 +59,7 @@ export async function runWebSearch(
     },
     body: JSON.stringify({
       id: body.session_id,
-      model: WEB_SEARCH_MODEL,
+      model: body.model,
       commands: body.commands,
       settings: {
         allowed_callers: ["direct"],

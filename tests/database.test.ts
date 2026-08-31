@@ -56,6 +56,7 @@ describe("persistent product state", () => {
       callId: "call",
       parentCallId: "",
       sessionId: "session",
+      model: "gpt-5.6-luna",
       signal: new AbortController().signal,
     };
 

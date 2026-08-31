@@ -7,6 +7,7 @@ async function call(tools: ReturnType<typeof createApplicationTools>, name: stri
     callId: "test",
     parentCallId: "",
     sessionId: "test",
+    model: "gpt-5.6-luna",
     signal: new AbortController().signal,
   });
 }
