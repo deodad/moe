@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/identification-split-conflated-vacuums"
+version = "0.1.0"
+description = "Split a conflated Thing by creating a new Thing and reassigning only supported history."
+keywords = ["moe", "identification", "split", "reconciliation"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 180.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

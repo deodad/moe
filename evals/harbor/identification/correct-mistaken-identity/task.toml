@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/identification-correct-mistaken-identity"
+version = "0.1.0"
+description = "Correct an existing Thing's mistaken identity without creating another Thing."
+keywords = ["moe", "identification", "correction", "deduplication"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 120.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

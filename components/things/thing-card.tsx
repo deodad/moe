@@ -1,66 +1,79 @@
-import { ArrowUpRight, Box } from "lucide-react";
+import { Box } from "lucide-react";
 import type { HistoryEvent, MaintenanceItem, Thing } from "@/lib/types";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { shortDate } from "@/lib/utils";
+
+function describe(thing: Thing) {
+  return [thing.attributes.year, thing.attributes.make, thing.attributes.model].filter(Boolean).join(" ");
+}
 
 export function ThingCard({
   thing,
   maintenance = [],
   history = [],
   compact = false,
-  selected = false,
-  onClick,
 }: {
   thing: Thing;
   maintenance?: MaintenanceItem[];
   history?: HistoryEvent[];
   compact?: boolean;
-  selected?: boolean;
-  onClick?: () => void;
 }) {
-  const description = [thing.attributes.year, thing.attributes.make, thing.attributes.model].filter(Boolean).join(" ");
-  if (onClick) {
+  const description = describe(thing);
+
+  if (compact) {
     return (
-      <button
-        className={cn(
-          "flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition",
-          selected ? "border-emerald-300 bg-emerald-50/60" : "border-stone-200 bg-white hover:border-stone-300",
-        )}
-        onClick={onClick}
-      >
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800"><Box className="size-4" /></span>
-        <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-stone-900">{thing.name}</span><span className="mt-0.5 block truncate text-xs text-stone-500">{description || thing.category || "Thing"}</span></span>
-        <ArrowUpRight className="size-4 text-stone-400" />
-      </button>
+      <Card size="sm">
+        <CardContent className="flex items-center gap-3">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+            <Box className="size-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-foreground">{thing.name}</p>
+            <p className="truncate text-xs text-muted-foreground">{description || thing.category || "Thing"}</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
+
   return (
-    <Card className={compact ? "rounded-xl" : undefined}>
-      <CardContent className={compact ? "p-4" : "p-6"}>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xl font-semibold tracking-[-0.025em] text-stone-950">{thing.name}</p>
-            <p className="mt-1 text-sm text-stone-500">{description || thing.category || "Maintained thing"}</p>
-          </div>
-          <span className="rounded-full bg-emerald-50 p-2 text-emerald-800"><ArrowUpRight className="size-4" /></span>
+    <Card>
+      <CardHeader className="flex-row items-start justify-between">
+        <div>
+          <CardTitle className="text-xl">{thing.name}</CardTitle>
+          <CardDescription className="mt-1">{description || thing.category || "Maintained thing"}</CardDescription>
         </div>
-        {!compact && thing.carePreferences && (
-          <div className="mt-6">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-stone-400">Care</p>
-            <p className="mt-2 text-sm leading-6 text-stone-700">{thing.carePreferences}</p>
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+          <Box className="size-4" />
+        </span>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-5">
+        {thing.carePreferences && (
+          <div>
+            <p className="text-[11px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">Care</p>
+            <p className="mt-2 text-sm leading-6 text-foreground">{thing.carePreferences}</p>
           </div>
         )}
-        {!compact && maintenance[0] && (
-          <div className="mt-6 border-t border-stone-100 pt-5">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-stone-400">Upcoming</p>
-            <p className="mt-2 text-sm font-medium text-stone-800">{maintenance[0].title}</p>
-          </div>
+        {maintenance[0] && (
+          <>
+            <Separator />
+            <div>
+              <p className="text-[11px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">Upcoming</p>
+              <p className="mt-2 text-sm font-medium text-foreground">{maintenance[0].title}</p>
+            </div>
+          </>
         )}
-        {!compact && history[0] && (
-          <div className="mt-5">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-stone-400">Recent</p>
-            <p className="mt-2 text-sm text-stone-700">{history[0].summary} · {new Date(history[0].occurredAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
-          </div>
+        {history[0] && (
+          <>
+            <Separator />
+            <div>
+              <p className="text-[11px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">Recent</p>
+              <p className="mt-2 text-sm text-foreground">
+                {history[0].summary} · {shortDate(history[0].occurredAt)}
+              </p>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

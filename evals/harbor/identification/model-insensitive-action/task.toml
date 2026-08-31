@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/identification-model-insensitive-action"
+version = "0.1.0"
+description = "Proceed without exact model identification when the requested action is model-insensitive."
+keywords = ["moe", "identification", "uncertainty"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 120.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

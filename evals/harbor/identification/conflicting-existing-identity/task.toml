@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/identification-conflicting-existing-identity"
+version = "0.1.0"
+description = "Clarify whether conflicting identity evidence is a correction or another Thing before mutating state."
+keywords = ["moe", "identification", "clarification", "conflict"]
+
+[metadata]
+category = "product-agent"
+difficulty = "hard"
+
+[agent]
+timeout_sec = 120.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

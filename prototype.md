@@ -60,6 +60,10 @@ Deployment:
   Vercel or similarly trivial web hosting
 ```
 
+For an internet-accessible single-user deployment, a shared password at the
+HTTP boundary is enough. This is deployment protection, not a product account
+system.
+
 Use Nanocodex server-side through Node rather than browser WASM for the prototype.
 
 Do not use Expo yet.
@@ -236,7 +240,13 @@ name
 category?
 attributes
 care_preferences?
+archived_at?
+merged_into_id?
 ```
+
+A Thing's identity is revisable. Archiving preserves retired or absorbed records; merging or splitting should preserve Events and MaintenanceItems rather than treating the first representation as final.
+
+Keep attributes sparse. Identity, stable configuration, and directly current characteristics belong on the Thing. Historical readings, completed work, observations, and findings belong in Events rather than mirrored attributes such as `current_mileage` or `last_service`.
 
 ## Event
 
@@ -247,6 +257,8 @@ summary
 occurred_at
 data
 ```
+
+Events are the canonical history. Their loose data can retain readings, completion details, findings, source, and a link to the MaintenanceItem whose completion produced the Event.
 
 ## MaintenanceItem
 
@@ -259,6 +271,8 @@ timing
 rationale?
 data
 ```
+
+MaintenanceItems describe future intent. Completion marks the item done and atomically creates a linked Event containing what actually happened; it does not replace the item's planned source or scope with completion facts.
 
 ## Conversation
 
@@ -280,10 +294,13 @@ Things
   get_thing
   create_thing
   update_thing
+  archive_thing
+  merge_things
 
 History
   get_history
   record_event
+  update_event
 
 Maintenance
   list_maintenance
@@ -536,7 +553,7 @@ A coding agent should be able to understand the interesting parts of the applica
 
 Do not build yet:
 
-- authentication
+- product accounts or multi-user authentication
 - multi-user support
 - onboarding
 - native mobile / Expo

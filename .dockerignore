@@ -1,0 +1,12 @@
+.git
+.next*
+node_modules
+data
+.harbor
+dogfood-output
+evals/**/artifacts
+test-results
+playwright-report
+.env
+.env.*
+npm-debug.log*

@@ -3,6 +3,7 @@ import { WebSocketServer, type WebSocket } from "ws";
 
 let responsesServer: WebSocketServer;
 let fixtureScenario: Promise<void> | null = null;
+let finishFixtureResponse: (() => void) | null = null;
 
 test.beforeAll(async () => {
   responsesServer = new WebSocketServer({ host: "127.0.0.1", port: 43991 });
@@ -27,7 +28,7 @@ test("desktop Things and Maintenance share durable state", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "What are we taking care of?" })).toBeVisible();
-  await page.locator("aside").getByRole("button", { name: /Maintenance/ }).click();
+  await page.getByRole("button", { name: "Maintenance", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Maintenance", exact: true })).toBeVisible();
   await expect(page.getByText("5,000-mile service", { exact: true })).toBeVisible();
 
@@ -35,13 +36,13 @@ test("desktop Things and Maintenance share durable state", async ({ page }) => {
   await serviceCard.getByRole("button", { name: "Done" }).click();
   await expect(page.getByText("5,000-mile service", { exact: true })).toHaveCount(0);
 
-  await page.locator("aside").getByRole("button", { name: "Things" }).click();
+  await page.getByRole("button", { name: "Things", exact: true }).click();
   await page.getByRole("button", { name: "4Runner Vehicle" }).click();
   await expect(page.getByText(/Keep long term/)).toBeVisible();
   await expect(page.getByText(/5,000-mile service completed/)).toBeVisible();
 
   await page.reload();
-  await page.locator("aside").getByRole("button", { name: "Maintenance" }).click();
+  await page.getByRole("button", { name: "Maintenance", exact: true }).click();
   await expect(page.getByText("5,000-mile service", { exact: true })).toHaveCount(0);
   await page.screenshot({ path: "test-results/desktop.png", fullPage: true });
   expect(consoleErrors).toEqual([]);
@@ -66,6 +67,7 @@ test("chat streams a real Nanocodex tool turn into durable state", async ({ page
   await composer.fill("I just bought a 2026 4Runner. I want to keep it forever.");
   await composer.press("Enter");
   await expect(page.getByText("I added your 2026 4Runner.", { exact: true })).toBeVisible();
+  finishFixtureResponse?.();
   await expect(page.getByText("I added your 2026 4Runner and its first service interval.", { exact: true })).toBeVisible();
   await expect(page.getByText("search things", { exact: true })).toBeVisible();
   await expect(page.getByText("create thing", { exact: true })).toBeVisible();
@@ -101,9 +103,6 @@ function messageReader(socket: WebSocket) {
 async function runNanocodexScenario(socket: WebSocket) {
   const reader = messageReader(socket);
   await reader.next();
-  sendCompleted(socket, "warmup", []);
-
-  await reader.next();
   sendTool(socket, "search", "call-search", "search_things", { query: "2026 4Runner" });
 
   await reader.next();
@@ -125,7 +124,7 @@ async function runNanocodexScenario(socket: WebSocket) {
 
   await reader.next();
   socket.send(JSON.stringify({ type: "response.output_text.delta", delta: "I added your 2026 4Runner." }));
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  await new Promise<void>((resolve) => { finishFixtureResponse = resolve; });
   sendFinal(socket, "final", "I added your 2026 4Runner and its first service interval.");
 }
 
@@ -156,6 +155,17 @@ function sendFinal(socket: WebSocket, responseId: string, text: string) {
 function sendCompleted(socket: WebSocket, responseId: string, output: unknown[]) {
   socket.send(JSON.stringify({
     type: "response.completed",
-    response: { id: responseId, status: "completed", output, usage: null },
+    response: {
+      id: responseId,
+      status: "completed",
+      output,
+      usage: {
+        input_tokens: 10,
+        input_tokens_details: { cached_tokens: 5 },
+        output_tokens: 2,
+        output_tokens_details: { reasoning_tokens: 1 },
+        total_tokens: 12,
+      },
+    },
   }));
 }

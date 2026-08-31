@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/identification-enrich-existing-identity"
+version = "0.1.0"
+description = "Add confirmed model information to an existing partial Thing."
+keywords = ["moe", "identification", "deduplication"]
+
+[metadata]
+category = "product-agent"
+difficulty = "easy"
+
+[agent]
+timeout_sec = 120.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

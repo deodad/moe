@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/maintenance-continuation-hvac-service-finding"
+version = "0.1.0"
+description = "Complete HVAC service and incorporate a technician finding without duplicating the plan."
+keywords = ["moe", "maintenance", "continuation", "history", "hvac"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 180.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

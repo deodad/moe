@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/identification-explicit-separate-second-thing"
+version = "0.1.0"
+description = "Create another Thing when the user explicitly distinguishes an otherwise identical object."
+keywords = ["moe", "identification", "creation", "plurality"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 180.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

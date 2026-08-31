@@ -127,6 +127,21 @@ flowchart TD
 
 Good questions appear at the moment they become useful: “Your first service is coming up. Do you normally take the car somewhere or do this yourself?”
 
+### Identity is revisable
+
+A Thing is the agent's current best grouping of facts about a physical object, not a permanently correct identity record. Its ID provides continuity; its name and attributes are revisable understanding. Events and maintenance are durable facts currently attributed to that Thing and may need to move when later evidence shows that two Things are the same or one Thing was actually two.
+
+The agent should defer identity questions while it can make safe progress. It should ask when uncertainty could change the target, guidance, or durable attribution of the current action. Explicit corrections and statements that Things are the same or different are strong evidence, but ambiguous history should not be reassigned merely to make the data look tidy.
+
+When understanding changes, the agent should repair the user's world without turning the user into a database operator:
+
+- Merge duplicate Things without losing history, maintenance, or care preferences.
+- Split a conflated Thing by moving only facts supported by evidence.
+- Keep replaced or retired Things as history instead of renaming them into their replacements.
+- Preserve unresolved distinctions until they become decision-relevant.
+
+**Identity is a revisable interpretation; durable facts should survive revisions to that interpretation.**
+
 ## Strong nouns, weak schemas
 
 The product needs enough semantics for reliable UI and behavior, without a rigid maintenance ontology.
@@ -152,6 +167,20 @@ flowchart TD
 Relations, attachments, provenance, and sources can connect these nouns where useful. Categories and attributes should remain loose until repeated product needs justify stronger structure.
 
 **Structure outcomes, not understanding.** Events and maintenance status need deterministic behavior. Nuanced care preferences can remain prose.
+
+### Canonical facts, derived understanding
+
+Durable state should be immutable wherever practical. Persist a fact or intention once, then derive the current picture from that canonical record instead of synchronizing copies across the system.
+
+- A **Thing** holds current identity, stable configuration, location, and care preferences. It should not accumulate historical rollups such as last service or copied mileage readings.
+- An **Event** is the canonical account of something that happened or was observed: completed work, measurements, usage, condition, findings, and provenance. Correct an Event explicitly when later evidence shows it is wrong; otherwise leave it unchanged.
+- A **MaintenanceItem** is a future intention. Its source, rationale, and planned scope describe why the work deserves attention, not what ultimately happened.
+
+Completing maintenance should atomically create an Event linked to the planned item. The completed item preserves the plan; the Event preserves actual completion details. A technician's weak-capacitor finding and a future capacitor-replacement item are not competing sources of truth: one is historical evidence and the other is intended action.
+
+Current mileage, last service, recent findings, elapsed time since work, and similar summaries should normally be derived from Events when a Thing is inspected. Materialize a derived value only after repeated product behavior proves that recomputing it is insufficient.
+
+**Persist facts and intentions; derive current understanding.**
 
 ## Minimal, flexible agent tools
 
@@ -212,10 +241,43 @@ The initial agent can stay general. Its specialization comes from good instructi
 - **Flat navigation, relational intelligence.** Keep Things easy to browse without denying useful relationships.
 - **Strong nouns, weak schemas.** Preserve product meaning while allowing the representation to evolve.
 - **Structure outcomes, not understanding.** Keep deterministic product state structured and nuanced context flexible.
+- **Prefer canonical state.** Persist facts and intentions once; derive current readings and summaries from history.
 - **Maintenance is mediated.** Recommend what matters, when it matters, at the granularity the user uses.
 - **Let preferences emerge.** Learn how a person cares for each Thing through interaction.
 - **Probe intelligently.** Ask only when an answer materially improves the current decision.
+- **Keep identity revisable.** Defer harmless uncertainty and preserve facts when Things are corrected, merged, or split.
 - **Search before creating.** Improve the existing representation instead of duplicating the user's world.
 - **The agent operates the application.** The user should not become a database clerk.
 - **Prefer primitives over workflows.** Keep the agent free to reason and compose.
 - **Let use shape the system.** Resist hardening schemas, orchestration, or product surfaces before real interactions demand it.
+
+## Appendix: converging the system to the spec
+
+The vision describes product behavior, not a promise that the current model, prompt, tools, and data representation already produce it. Changes should move the system toward the vision through a repeatable learning loop.
+
+### The loop
+
+1. **Observe or specify a behavior.** Start from real use or a concrete scenario whose desired outcome follows from the vision.
+2. **Encode the behavior in evals.** Assert durable outcomes and forbidden mutations rather than exact wording or a preferred tool sequence.
+3. **Record the baseline.** Keep useful failures. A red eval is evidence about the current system, not an instruction to patch around the case.
+4. **Locate the failure.** Determine whether the model lacked context, made a poor judgment, lacked a capability, encountered unsafe tool semantics, or could not represent the outcome.
+5. **Choose the lowest general lever.** Prefer a small mechanism that improves a class of scenarios over a rule that names the failing example.
+6. **Implement the mechanism.** Keep semantic judgment with the agent and deterministic state integrity with the application.
+7. **Rerun focused and full evals.** Inspect transcripts, tool calls, tool results, and final state; do not rely only on an aggregate score.
+8. **Use the product.** Verify that passing the eval still feels natural in conversation and structured UI.
+9. **Update the spec when learning changes it.** If an eval exposes a better product principle, change the vision and eval deliberately rather than weakening the assertion silently.
+
+### Available levers
+
+- **Evals** define the behavior independently of its implementation.
+- **Context** makes current durable state and relevant evidence visible to the agent.
+- **Instructions** express compact, general decision policy.
+- **Tools** determine which changes the agent can make.
+- **Tool semantics** provide validation, atomicity, and recoverability without deciding meaning for the agent.
+- **Data model** represents outcomes that need deterministic behavior.
+- **Conversation state** retains local discussion but does not replace durable application state.
+- **UI** makes consequential actions understandable and gives common actions a direct path.
+- **Model and reasoning settings** affect judgment quality after the model has the necessary context and capabilities.
+- **Observability** distinguishes retrieval, judgment, execution, and representation failures.
+
+The preferred direction is bitter-pilled: give a capable agent complete relevant context, a few expressive primitives, and responsibility for semantic decisions. Add application machinery only where deterministic integrity, atomicity, or repeated product behavior requires it. Do not encode a growing catalog of domain cases into prompts, workflows, or schemas.

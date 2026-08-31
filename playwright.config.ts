@@ -17,6 +17,7 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 120_000,
     env: {
+      MOE_NEXT_DIST_DIR: ".next-e2e",
       MOE_DATABASE_PATH: "/tmp/moe-playwright.db",
       OPENAI_API_KEY: "test-key",
       NANOCODEX_WEBSOCKET_URL: "ws://127.0.0.1:43991",

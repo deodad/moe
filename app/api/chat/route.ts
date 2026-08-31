@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import type { AgentEvent, SessionSnapshot } from "nanocodex";
-import { AGENT_INSTRUCTIONS } from "@/agent/instructions";
+import { agentInstructionsWithThings } from "@/agent/context";
 import { createApplicationTools } from "@/agent/tools";
+import { createWebSearchTool } from "@/agent/web-search";
 import { getDatabase } from "@/lib/database";
 import type { ChatMessage, ToolActivity } from "@/lib/types";
 
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 const encoder = new TextEncoder();
+const TURN_TIMEOUT_MS = 90_000;
 type NanocodexModel = "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna";
 
 function line(value: unknown) {
@@ -52,12 +54,25 @@ function activityFromEvent(event: AgentEvent, activities: Map<string, ToolActivi
       tool: existing?.tool ?? "tool",
       status: payload.status === "failed" ? "error" : "complete",
       arguments: existing?.arguments,
-      result: parsedResult(payload.result),
+      result: payload.status === "failed"
+        ? "This tool could not complete the request."
+        : parsedResult(payload.result),
     };
     activities.set(callId, activity);
     return activity;
   }
   return null;
+}
+
+function publicTurnError(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  if (/rate.?limit|429|capacity/i.test(message)) {
+    return "Moe is busy right now. Please try again in a moment.";
+  }
+  if (/401|403|api.?key|authentication|unauthorized/i.test(message)) {
+    return "Moe could not authenticate with the model service. Check the local API-key configuration.";
+  }
+  return "Moe could not finish that response. Please try again.";
 }
 
 export async function POST(request: Request) {
@@ -69,7 +84,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = await request.json() as { conversationId?: string; message?: string };
+  const body = await request.json().catch(() => null) as { conversationId?: string; message?: string } | null;
+  if (!body) return Response.json({ error: "Invalid chat request" }, { status: 400 });
   const message = body.message?.trim();
   if (!message) return Response.json({ error: "Message is required" }, { status: 400 });
 
@@ -89,17 +105,31 @@ export async function POST(request: Request) {
   const title = conversation.messages.length === 0 ? titleFrom(message) : conversation.title;
   db.saveConversation(conversation.id, { title, messages });
 
+  let cancelled = false;
+  let cancelTurn: (() => Promise<void>) | undefined;
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       let agent: Awaited<ReturnType<(typeof import("nanocodex/node"))["Agent"]["create"]>> | undefined;
       let turn: ReturnType<NonNullable<typeof agent>["turn"]["prompt"]> | undefined;
       let watcher: ReturnType<NonNullable<typeof agent>["events"]["watch"]> | undefined;
       let unwatch: (() => void) | undefined;
+      let turnTimeout: ReturnType<typeof setTimeout> | undefined;
+      let timedOut = false;
       const activities = new Map<string, ToolActivity>();
+      const enqueue = (value: unknown) => {
+        if (cancelled) return false;
+        try {
+          controller.enqueue(line(value));
+          return true;
+        } catch {
+          cancelled = true;
+          return false;
+        }
+      };
 
       try {
-        controller.enqueue(line({ type: "conversation", conversationId: conversation.id, userMessage }));
-        const { Agent } = await import("nanocodex/node");
+        enqueue({ type: "conversation", conversationId: conversation.id, userMessage });
+        const { Agent, Transport } = await import("nanocodex/node");
         const snapshot = db.getConversationSnapshot(conversation.id) as SessionSnapshot | null;
         const configuredModel = process.env.NANOCODEX_MODEL as NanocodexModel | undefined;
         const websocketUrl = process.env.NANOCODEX_WEBSOCKET_URL?.trim();
@@ -107,16 +137,25 @@ export async function POST(request: Request) {
           ? configuredModel
           : "gpt-5.6-luna";
 
-        agent = await Agent.create({
+        const webTool = createWebSearchTool({
           apiKey,
+          apiBaseUrl: process.env.OPENAI_API_BASE_URL,
+        });
+        agent = await Agent.create({
+          transport: Transport.openAi({
+            apiKey,
+            ...(websocketUrl ? { websocketUrl } : {}),
+          }),
           model,
           thinking: "low",
           reasoningMode: "standard",
-          instructions: AGENT_INSTRUCTIONS,
-          tools: createApplicationTools(db),
+          instructions: agentInstructionsWithThings(db.listThings()),
+          tools: {
+            ...createApplicationTools(db),
+            [webTool.name]: webTool,
+          },
           toolMode: "direct",
           workspace: process.cwd(),
-          ...(websocketUrl ? { websocketUrl } : {}),
           ...(snapshot ? { resume: snapshot } : {}),
         });
 
@@ -124,41 +163,65 @@ export async function POST(request: Request) {
         unwatch = watcher.onEvent((event) => {
           if (event.type === "assistant.delta") {
             const text = typeof event.payload.text === "string" ? event.payload.text : "";
-            if (text) controller.enqueue(line({ type: "delta", text }));
+            if (text) enqueue({ type: "delta", text });
           }
           if (event.type === "tool.call" || event.type === "tool.result") {
             const activity = activityFromEvent(event, activities);
-            if (activity) controller.enqueue(line({ type: "activity", activity }));
+            if (activity) enqueue({ type: "activity", activity });
           }
         });
 
         turn = agent.turn.prompt({ input: message });
+        cancelTurn = () => turn!.cancel();
+        turnTimeout = setTimeout(() => {
+          timedOut = true;
+          void turn?.cancel().catch(() => undefined);
+        }, TURN_TIMEOUT_MS);
         const result = await turn.result();
-        const assistantMessage: ChatMessage = {
-          id: randomUUID(),
-          role: "assistant",
-          text: result.finalMessage,
-          createdAt: new Date().toISOString(),
-          activities: [...activities.values()],
-        };
-        const saved = db.saveConversation(conversation.id, {
-          title,
-          messages: [...messages, assistantMessage],
-          snapshot: result.snapshot,
-        });
-        controller.enqueue(line({ type: "done", assistantMessage, conversation: saved, state: db.getState() }));
+        try {
+          if (cancelled) return;
+          const assistantMessage: ChatMessage = {
+            id: randomUUID(),
+            role: "assistant",
+            text: result.finalMessage,
+            createdAt: new Date().toISOString(),
+            activities: [...activities.values()],
+          };
+          const saved = db.saveConversation(conversation.id, {
+            title,
+            messages: [...messages, assistantMessage],
+            snapshot: await result.snapshot(),
+          });
+          enqueue({ type: "done", assistantMessage, conversation: saved, state: db.getState() });
+        } finally {
+          result.dispose();
+        }
       } catch (error) {
-        const detail = error instanceof Error ? error.message : "The Nanocodex turn failed";
-        controller.enqueue(line({ type: "error", error: detail }));
+        if (!cancelled) {
+          console.error("Nanocodex turn failed", error);
+          enqueue({
+            type: "error",
+            error: timedOut ? "Moe took too long to finish. Please try that request again." : publicTurnError(error),
+          });
+        }
       } finally {
         try {
+          if (turnTimeout) clearTimeout(turnTimeout);
           unwatch?.();
           watcher?.off();
           turn?.dispose();
           if (agent) await agent.session.shutdown();
         } finally {
-          controller.close();
+          if (!cancelled) controller.close();
         }
+      }
+    },
+    async cancel() {
+      cancelled = true;
+      try {
+        await cancelTurn?.();
+      } catch {
+        // The turn may already have reached a terminal state.
       }
     },
   });

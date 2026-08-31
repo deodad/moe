@@ -1,5 +1,7 @@
 node_modules/
 .next/
+.next-e2e/
+.next-live*/
 .env
 .env.local
 data/*.db
@@ -7,5 +9,9 @@ data/*.db-*
 coverage/
 test-results/
 playwright-report/
+dogfood-output/
+.harbor/
+__pycache__/
+*.pyc
 *.tsbuildinfo
 .DS_Store

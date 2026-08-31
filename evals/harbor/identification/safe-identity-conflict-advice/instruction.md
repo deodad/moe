@@ -1,0 +1,1 @@
+{"case":"safe-identity-conflict-advice","initialThings":[{"key":"runner","name":"4Runner","category":"Vehicle","attributes":{"year":"2019","make":"Toyota","model":"4Runner"}}],"turns":["My 2020 4Runner needs an oil change soon. Roughly what does a normal oil change involve? Don't save or update anything yet."]}

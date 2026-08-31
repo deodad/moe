@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/maintenance-mediation-4runner-shop"
+version = "0.1.0"
+description = "Research a 4Runner and create a small composite plan for an owner who uses a shop."
+keywords = ["moe", "maintenance", "mediation", "research", "granularity"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 240.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

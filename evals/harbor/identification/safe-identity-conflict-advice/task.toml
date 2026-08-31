@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/identification-safe-identity-conflict-advice"
+version = "0.1.0"
+description = "Proceed with safe generic advice despite identity conflict when no durable action is requested."
+keywords = ["moe", "identification", "uncertainty", "deferral"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 180.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

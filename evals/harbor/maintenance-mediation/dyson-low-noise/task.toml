@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/maintenance-mediation-dyson-low-noise"
+version = "0.1.0"
+description = "Research a Dyson and create a small plan containing only useful routine care."
+keywords = ["moe", "maintenance", "mediation", "research", "appliance"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 240.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

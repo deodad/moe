@@ -7,6 +7,8 @@ export type Thing = {
   category: string | null;
   attributes: Record<string, string>;
   carePreferences: string | null;
+  archivedAt: string | null;
+  mergedIntoId: string | null;
   createdAt: string;
 };
 

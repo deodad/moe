@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/identification-ambiguous-two-bikes"
+version = "0.1.0"
+description = "Ask which existing Thing is meant before recording ambiguous history."
+keywords = ["moe", "identification", "clarification"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 120.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

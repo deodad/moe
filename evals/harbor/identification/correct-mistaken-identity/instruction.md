@@ -1,0 +1,1 @@
+{"case":"correct-mistaken-identity","initialThings":[{"name":"Dyson V15 Detect","category":"Appliance","attributes":{"brand":"Dyson","model":"V15 Detect"}}],"turns":["I checked the label again. My vacuum is actually a Dyson V12 Detect Slim, not a V15."]}

@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/dyson-confirmed-model"
+version = "0.1.0"
+description = "Persist confirmed identity and a free-form care preference after clarification."
+keywords = ["moe", "identification", "dyson", "care-preferences"]
+
+[metadata]
+category = "product-agent"
+difficulty = "easy"
+
+[agent]
+timeout_sec = 180.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

@@ -1,0 +1,1 @@
+{"case":"dyson-confirmed-model","turns":["I have a Dyson cordless vacuum from Costco with a green light. Help me take care of it.","I checked: it is a Dyson V15 Detect. Please remember that I want simple, grouped maintenance reminders rather than lots of tiny tasks."]}
