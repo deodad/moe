@@ -70,6 +70,8 @@ test("chat streams a real Nanocodex tool turn into durable state", async ({ page
   await expect(page.getByText("I added your 2026 4Runner.", { exact: true })).toBeVisible();
   finishFixtureResponse?.();
   await expect(page.getByText("I added your 2026 4Runner and its first service interval.", { exact: true })).toBeVisible();
+  await expect(page.locator("aside").getByText("Subject context", { exact: true })).toBeVisible();
+  await expect(page.getByPlaceholder("Ask about 4Runner…")).toBeVisible();
   await expect(page.getByText("Searched inventory", { exact: true })).toBeVisible();
   await expect(page.getByText("Item logged", { exact: true })).toBeVisible();
   await expect(page.getByText("Maintenance logged", { exact: true })).toBeVisible();

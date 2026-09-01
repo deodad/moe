@@ -31,6 +31,7 @@ import { MaintenanceCard } from "@/components/maintenance/maintenance-card";
 import { MaintenanceRow } from "@/components/maintenance/maintenance-row";
 import { SubjectCard } from "@/components/subjects/subject-card";
 import { SubjectContext } from "@/components/subjects/subject-context";
+import { currentConversationSubjectId } from "@/lib/conversation-subject";
 
 type View = "chat" | "subjects" | "maintenance";
 
@@ -207,6 +208,9 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
 
   const activeConversation = state.conversations.find((item) => item.id === activeConversationId) ?? state.conversations[0];
   const selectedSubject = state.subjects.find((item) => item.id === selectedSubjectId) ?? state.subjects[0];
+  const conversationSubjectId = currentConversationSubjectId(activeConversation, state.subjects, streamMessage?.activities);
+  const conversationSubject = state.subjects.find((item) => item.id === conversationSubjectId);
+  const contextSubject = view === "subjects" ? selectedSubject : view === "chat" ? conversationSubject : undefined;
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [activeConversation?.messages, streamMessage]);
 
@@ -254,7 +258,7 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
         body: JSON.stringify({
           conversationId: activeConversationId,
           message: text,
-          ...(view === "subjects" && selectedSubject ? { subjectId: selectedSubject.id } : {}),
+          ...(contextSubject ? { subjectId: contextSubject.id } : {}),
         }),
       });
       if (!response.ok || !response.body) {
@@ -396,9 +400,9 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
 
         {(view === "chat" || view === "subjects") && (
           <div className="flex min-h-0 flex-1">
-            {view === "subjects" && selectedSubject && (
+            {contextSubject && (
               <aside className="hidden w-[340px] shrink-0 gap-3 p-4 lg:flex lg:min-h-0 lg:flex-col">
-                <div>
+                {view === "subjects" && <div>
                   <label className="mb-1.5 block font-mono text-[0.68rem] tracking-wide text-muted-foreground uppercase" htmlFor="subject-switcher">
                     Inventory
                   </label>
@@ -410,13 +414,13 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
                   >
                     {state.subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}
                   </select>
-                </div>
+                </div>}
                 <ScrollArea className="min-h-0 flex-1">
                   <div className="pb-3">
                     <SubjectContext
-                      subject={selectedSubject}
-                      maintenance={state.maintenance.filter((item) => item.subjectId === selectedSubject.id)}
-                      history={state.events.filter((item) => item.subjectId === selectedSubject.id)}
+                      subject={contextSubject}
+                      maintenance={state.maintenance.filter((item) => item.subjectId === contextSubject.id)}
+                      history={state.events.filter((item) => item.subjectId === contextSubject.id)}
                     />
                   </div>
                 </ScrollArea>
@@ -425,28 +429,28 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
           <main className="flex min-h-0 min-w-0 flex-1 flex-col" aria-busy={sending}>
             <ScrollArea className="min-h-0 flex-1">
               <div className="mx-auto max-w-3xl px-4 py-6 sm:px-8 sm:py-8">
-                {view === "subjects" && selectedSubject && (
+                {contextSubject && (
                   <details className="mb-6 border border-line-strong bg-card lg:hidden">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
                       <span>
                         <span className="block font-mono text-[0.68rem] tracking-wide text-muted-foreground uppercase">Subject context</span>
-                        <span className="block font-semibold">{selectedSubject.name}</span>
+                        <span className="block font-semibold">{contextSubject.name}</span>
                       </span>
                       <span className="font-mono text-xs text-muted-foreground">VIEW +</span>
                     </summary>
                     <div className="border-t border-border p-3">
-                      <select
+                      {view === "subjects" && <select
                         aria-label="Select Subject"
                         value={selectedSubject.id}
                         onChange={(event) => setSelectedSubjectId(event.target.value)}
                         className="mb-3 h-10 w-full border border-line-strong bg-card px-3 text-sm font-medium outline-none"
                       >
                         {state.subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}
-                      </select>
+                      </select>}
                       <SubjectContext
-                        subject={selectedSubject}
-                        maintenance={state.maintenance.filter((item) => item.subjectId === selectedSubject.id)}
-                        history={state.events.filter((item) => item.subjectId === selectedSubject.id)}
+                        subject={contextSubject}
+                        maintenance={state.maintenance.filter((item) => item.subjectId === contextSubject.id)}
+                        history={state.events.filter((item) => item.subjectId === contextSubject.id)}
                       />
                     </div>
                   </details>
@@ -503,7 +507,7 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
                   onChange={(event) => setMessage(event.target.value)}
                   onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void submit(); } }}
                   rows={1}
-                  placeholder={view === "subjects" && selectedSubject ? `Ask about ${selectedSubject.name}…` : "Tell Moe what happened…"}
+                  placeholder={contextSubject ? `Ask about ${contextSubject.name}…` : "Tell Moe what happened…"}
                   className="max-h-32 min-h-10 flex-1 resize-none border-0 bg-transparent px-0 py-2 shadow-none focus-visible:ring-0"
                 />
                 <Button type="submit" size="icon" disabled={!message.trim() || sending} aria-label="Send message" className="font-mono">{"↑"}</Button>
