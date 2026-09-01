@@ -1,7 +1,7 @@
 "use client";
 
 import type { MaintenanceItem, Timing } from "@/lib/types";
-import { friendlyDueDate } from "@/lib/maintenance-schedule";
+import { maintenanceScheduleLabel } from "@/lib/maintenance-schedule";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +10,7 @@ const timing: Record<Timing, { label: string; className: string }> = {
   this_week: { label: "This week", className: "border-warning/50 bg-warning/10 text-warning" },
   this_month: { label: "This month", className: "border-line-strong bg-transparent text-foreground" },
   later: { label: "Later", className: "border-border bg-muted text-muted-foreground" },
+  watching: { label: "Watching", className: "border-border bg-muted text-muted-foreground" },
 };
 
 /** A compact maintenance record for chat tool-activity drops — one bordered row, not a full ledger row. */
@@ -26,9 +27,10 @@ export function MaintenanceCard({
         <div className="min-w-0">
           <p className="text-sm font-medium text-foreground">{item.title}</p>
           {item.subjectName && <p className="text-xs text-muted-foreground">{item.subjectName}</p>}
+          {item.due?.condition && <p className="mt-1 text-xs text-foreground">{item.due.condition}</p>}
         </div>
         <Badge variant="outline" className={timing[item.timing].className}>
-          {item.dueDate ? friendlyDueDate(item.dueDate) : timing[item.timing].label}
+          {item.due ? maintenanceScheduleLabel(item.due, item.checkOn) : timing[item.timing].label}
         </Badge>
       </div>
       {onAction && (

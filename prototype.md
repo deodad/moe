@@ -148,6 +148,8 @@ THIS WEEK
 THIS MONTH
 
 LATER
+
+WATCHING
 ```
 
 Example:
@@ -158,7 +160,7 @@ Example:
 │ 4Runner                        │
 │ This month                     │
 │                                │
-│ [ Done ] [ Later ]             │
+│ [ Done ] [ +1 month ]          │
 └────────────────────────────────┘
 ```
 
@@ -273,7 +275,8 @@ id
 subject_id?
 title
 status
-due_date (YYYY-MM-DD; canonical schedule)
+due (optional date and/or prose condition)
+check_on? (YYYY-MM-DD; next review, not the work's deadline)
 rationale?
 data
 ```

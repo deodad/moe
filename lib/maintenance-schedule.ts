@@ -47,6 +47,32 @@ export function timingForDate(dueDate: string, today = dateOnly()): Timing {
   return "later";
 }
 
+type DueCriteria = { date?: string; condition?: string };
+
+export function attentionDate(due: DueCriteria, checkOn: string | null) {
+  if (!due.date) return checkOn;
+  if (!checkOn) return due.date;
+  return due.date < checkOn ? due.date : checkOn;
+}
+
+export function timingForMaintenance(due: DueCriteria, checkOn: string | null, today = dateOnly()): Timing {
+  const date = attentionDate(due, checkOn);
+  return date ? timingForDate(date, today) : "watching";
+}
+
+export function maintenanceScheduleLabel(due: DueCriteria, checkOn: string | null, today = dateOnly()) {
+  const date = attentionDate(due, checkOn);
+  if (!date) return "Watching";
+  const label = friendlyDueDate(date, today);
+  if (date === due.date) return label;
+  if (label === "Today") return "Check today";
+  if (label === "Tomorrow") return "Check tomorrow";
+  if (label === "This week") return "Check this week";
+  if (label === "Next week") return "Check next week";
+  if (label === "Overdue") return "Check overdue";
+  return `Check in ${label}`;
+}
+
 export function friendlyDueDate(dueDate: string, today = dateOnly()) {
   const due = parseDate(dueDate);
   const current = parseDate(today);

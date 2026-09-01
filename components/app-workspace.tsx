@@ -40,6 +40,7 @@ const maintenanceGroups = [
   ["this_week", "This week"],
   ["this_month", "This month"],
   ["later", "Later"],
+  ["watching", "Watching"],
 ] as const;
 
 const suggestions = [

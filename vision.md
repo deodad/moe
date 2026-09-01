@@ -91,14 +91,14 @@ Not every concept the agent reasons about needs to become a Subject. A muffler i
 
 ### Maintenance
 
-Maintenance is an attention queue, not a calendar UI. Each item still stores an honest date-only schedule; the product derives broad attention groups and friendly relative labels from that date.
+Maintenance is an attention queue, not a calendar UI. Each item stores honest due criteria: a known date, a prose real-world condition, or both. A separate check-on date can bring unresolved work back to the agent's attention without pretending the work itself is due then.
 
 ```mermaid
 flowchart LR
-    O[Overdue] --> W[This week] --> M[This month] --> L[Later]
+    O[Overdue] --> W[This week] --> M[This month] --> L[Later] --> G[Watching]
 ```
 
-The queue can say “this week,” “next week,” or “3 months” without making the user manage appointments. Mileage, usage, seasons, condition, and recurrence inform the chosen date, but vague attention buckets are never the complete persisted schedule.
+The queue can say “this week,” “next week,” “3 months,” or “watching” without making the user manage appointments. Mileage, usage, seasons, condition, and recurrence can remain honest prose until repeated behavior justifies stronger structure. Attention buckets are derived projections, never the complete persisted schedule.
 
 ## Agent-mediated maintenance
 

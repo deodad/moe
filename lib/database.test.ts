@@ -25,16 +25,24 @@ describe("MoeDatabase", () => {
     db.close();
   });
 
-  it("stores a date-only schedule and derives its attention bucket", () => {
+  it("stores honest due criteria and derives its attention bucket", () => {
     const db = new MoeDatabase(":memory:", false);
-    const item = db.createMaintenance({ title: "Winterize outdoor faucet", dueDate: "2026-10-15" });
+    const item = db.createMaintenance({
+      title: "Winterize outdoor faucet",
+      due: { condition: "Before the first freeze" },
+      checkOn: "2026-10-15",
+    });
 
-    expect(item.dueDate).toBe("2026-10-15");
-    expect(item.dueDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(db.sqlite.prepare("SELECT due_date FROM maintenance_items WHERE id = ?").get(item.id)).toEqual({
-      due_date: "2026-10-15",
+    expect(item).toMatchObject({
+      due: { condition: "Before the first freeze" },
+      checkOn: "2026-10-15",
+    });
+    expect(db.sqlite.prepare("SELECT due_json, check_on FROM maintenance_items WHERE id = ?").get(item.id)).toEqual({
+      due_json: JSON.stringify({ condition: "Before the first freeze" }),
+      check_on: "2026-10-15",
     });
     expect((db.sqlite.prepare("PRAGMA table_info(maintenance_items)").all() as Array<{ name: string }>).map(({ name }) => name)).not.toContain("timing");
+    expect((db.sqlite.prepare("PRAGMA table_info(maintenance_items)").all() as Array<{ name: string }>).map(({ name }) => name)).not.toContain("due_date");
     db.close();
   });
 
@@ -170,8 +178,44 @@ describe("MoeDatabase", () => {
     expect(migrated.getMaintenance("legacy-maintenance")).toMatchObject({
       subjectId: "legacy-subject",
       title: "Wash filter",
-      dueDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      due: { date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) },
     });
+    migrated.close();
+  });
+
+  it("migrates date-only maintenance into due criteria", () => {
+    const directory = mkdtempSync(join(tmpdir(), "moe-due-migration-"));
+    directories.push(directory);
+    const path = join(directory, "moe.db");
+    const previous = new DatabaseSync(path);
+    previous.exec(`
+      CREATE TABLE subjects (
+        id TEXT PRIMARY KEY, name TEXT NOT NULL, category TEXT, attributes_json TEXT NOT NULL DEFAULT '{}',
+        care_preferences TEXT, archived_at TEXT, merged_into_id TEXT, created_at TEXT NOT NULL
+      );
+      CREATE TABLE events (
+        id TEXT PRIMARY KEY, subject_id TEXT, summary TEXT NOT NULL, occurred_at TEXT NOT NULL,
+        data_json TEXT NOT NULL DEFAULT '{}', created_at TEXT NOT NULL
+      );
+      CREATE TABLE maintenance_items (
+        id TEXT PRIMARY KEY, subject_id TEXT, title TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active',
+        due_date TEXT NOT NULL, rationale TEXT, data_json TEXT NOT NULL DEFAULT '{}', completed_at TEXT,
+        created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      );
+      CREATE TABLE conversations (
+        id TEXT PRIMARY KEY, title TEXT NOT NULL, messages_json TEXT NOT NULL DEFAULT '[]', snapshot_json TEXT,
+        created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      );
+      INSERT INTO maintenance_items VALUES ('dated-item', NULL, 'Clean dryer vent', 'active', '2026-10-15', NULL, '{}', NULL, '2026-09-01', '2026-09-01');
+    `);
+    previous.close();
+
+    const migrated = new MoeDatabase(path, false);
+    expect(migrated.getMaintenance("dated-item")).toMatchObject({
+      due: { date: "2026-10-15" },
+      checkOn: null,
+    });
+    expect((migrated.sqlite.prepare("PRAGMA table_info(maintenance_items)").all() as Array<{ name: string }>).map(({ name }) => name)).not.toContain("due_date");
     migrated.close();
   });
 

@@ -121,7 +121,8 @@ async function runNanocodexScenario(socket: WebSocket) {
   sendTool(socket, "maintenance", "call-maintenance", "create_maintenance", {
     subject_id: subject.id,
     title: "5,000-mile service",
-    timing: "later",
+    due: { condition: "At 5,000 miles" },
+    check_on: "2026-11-01",
     rationale: "The first practical service interval to track.",
   });
 

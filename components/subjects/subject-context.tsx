@@ -1,6 +1,6 @@
 import type { HistoryEvent, MaintenanceItem, Subject } from "@/lib/types";
 import { shortDate } from "@/lib/utils";
-import { friendlyDueDate } from "@/lib/maintenance-schedule";
+import { maintenanceScheduleLabel } from "@/lib/maintenance-schedule";
 
 export function SubjectContext({
   subject,
@@ -58,8 +58,9 @@ export function SubjectContext({
             {maintenance.slice(0, 3).map((item) => (
               <li key={item.id} className="border-l-2 border-warning pl-3 text-sm">
                 <p className="font-medium">{item.title}</p>
+                {item.due?.condition && <p className="mt-0.5 text-xs text-muted-foreground">{item.due.condition}</p>}
                 <p className="mt-0.5 font-mono text-[0.68rem] tracking-wide text-muted-foreground uppercase">
-                  {item.dueDate ? friendlyDueDate(item.dueDate) : item.timing.replaceAll("_", " ")}
+                  {item.due ? maintenanceScheduleLabel(item.due, item.checkOn) : item.timing.replaceAll("_", " ")}
                 </p>
               </li>
             ))}

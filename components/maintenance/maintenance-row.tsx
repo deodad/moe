@@ -1,7 +1,7 @@
 "use client";
 
 import type { MaintenanceItem, Timing } from "@/lib/types";
-import { friendlyDueDate } from "@/lib/maintenance-schedule";
+import { maintenanceScheduleLabel } from "@/lib/maintenance-schedule";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -11,6 +11,7 @@ const timing: Record<Timing, { label: string; className: string }> = {
   this_week: { label: "This week", className: "border-warning/50 bg-warning/10 text-warning" },
   this_month: { label: "This month", className: "border-line-strong bg-transparent text-foreground" },
   later: { label: "Later", className: "border-border bg-muted text-muted-foreground" },
+  watching: { label: "Watching", className: "border-border bg-muted text-muted-foreground" },
 };
 
 function includedOperations(item: MaintenanceItem) {
@@ -36,11 +37,12 @@ export function MaintenanceRow({
     <TableRow>
       <TableCell className="whitespace-nowrap align-top">
         <Badge variant="outline" className={timing[item.timing].className}>
-          {item.dueDate ? friendlyDueDate(item.dueDate) : timing[item.timing].label}
+          {item.due ? maintenanceScheduleLabel(item.due, item.checkOn) : timing[item.timing].label}
         </Badge>
       </TableCell>
       <TableCell className="align-top whitespace-normal">
         <p className="font-medium text-foreground">{item.title}</p>
+        {item.due?.condition && <p className="mt-1 text-xs leading-5 text-foreground">{item.due.condition}</p>}
         {item.rationale && <p className="mt-1 text-xs leading-5 text-muted-foreground">{item.rationale}</p>}
         {operations.length > 0 && (
           <details className="mt-1.5 text-xs text-muted-foreground">

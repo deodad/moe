@@ -12,7 +12,7 @@ import type {
   Subject,
   Timing,
 } from "@/lib/types";
-import { legacyTimingDate, timingForDate } from "@/lib/maintenance-schedule";
+import { legacyTimingDate, timingForMaintenance } from "@/lib/maintenance-schedule";
 
 type JsonObject = Record<string, unknown>;
 
@@ -31,6 +31,17 @@ function parseJson<T>(value: unknown, fallback: T): T {
 
 function stringify(value: unknown) {
   return JSON.stringify(value ?? {});
+}
+
+function normalizeDue(due: { date?: string; condition?: string }, checkOn?: string | null) {
+  const normalized = {
+    ...(due.date ? { date: due.date } : {}),
+    ...(due.condition?.trim() ? { condition: due.condition.trim() } : {}),
+  };
+  if (!normalized.date && !normalized.condition) throw new Error("Maintenance due criteria require a date or condition");
+  if (normalized.date) timingForMaintenance({ date: normalized.date }, null);
+  if (checkOn) timingForMaintenance({}, checkOn);
+  return normalized;
 }
 
 export class MoeDatabase {
@@ -86,7 +97,8 @@ export class MoeDatabase {
         subject_id TEXT REFERENCES subjects(id) ON DELETE SET NULL,
         title TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'active',
-        due_date TEXT NOT NULL,
+        due_json TEXT NOT NULL DEFAULT '{}',
+        check_on TEXT,
         rationale TEXT,
         data_json TEXT NOT NULL DEFAULT '{}',
         completed_at TEXT,
@@ -112,11 +124,18 @@ export class MoeDatabase {
     const maintenanceColumns = new Set(
       (this.sqlite.prepare("PRAGMA table_info(maintenance_items)").all() as Array<{ name: string }>).map((column) => column.name),
     );
-    if (!maintenanceColumns.has("due_date")) this.sqlite.exec("ALTER TABLE maintenance_items ADD COLUMN due_date TEXT");
+    if (!maintenanceColumns.has("due_json")) this.sqlite.exec("ALTER TABLE maintenance_items ADD COLUMN due_json TEXT NOT NULL DEFAULT '{}'");
+    if (!maintenanceColumns.has("check_on")) this.sqlite.exec("ALTER TABLE maintenance_items ADD COLUMN check_on TEXT");
+    if (maintenanceColumns.has("due_date")) {
+      this.sqlite.exec("UPDATE maintenance_items SET due_json = json_object('date', due_date) WHERE due_date IS NOT NULL");
+      this.sqlite.exec("ALTER TABLE maintenance_items DROP COLUMN due_date");
+    }
     if (maintenanceColumns.has("timing")) {
-      const undated = this.sqlite.prepare("SELECT id, timing FROM maintenance_items WHERE due_date IS NULL").all() as Array<{ id: string; timing: Timing }>;
-      const backfill = this.sqlite.prepare("UPDATE maintenance_items SET due_date = ? WHERE id = ?");
-      for (const item of undated) backfill.run(legacyTimingDate(item.timing), item.id);
+      const legacyItems = this.sqlite.prepare("SELECT id, timing, due_json FROM maintenance_items").all() as Array<{ id: string; timing: Timing; due_json: string }>;
+      const backfill = this.sqlite.prepare("UPDATE maintenance_items SET due_json = ? WHERE id = ?");
+      for (const item of legacyItems) {
+        if (item.due_json === "{}") backfill.run(stringify({ date: legacyTimingDate(item.timing) }), item.id);
+      }
       this.sqlite.exec("ALTER TABLE maintenance_items DROP COLUMN timing");
     }
   }
@@ -147,13 +166,14 @@ export class MoeDatabase {
     this.createMaintenance({
       subjectId: runner.id,
       title: "5,000-mile service",
-      dueDate: "2026-09-21",
+      due: { condition: "At the next 5,000-mile service interval" },
+      checkOn: "2026-09-21",
       rationale: "The odometer is approaching the next 5,000-mile service interval.",
     });
     this.createMaintenance({
       subjectId: house.id,
       title: "Clean dryer vent",
-      dueDate: "2026-09-04",
+      due: { date: "2026-09-04" },
       rationale: "Annual cleaning reduces drying time and lint buildup.",
     });
   }
@@ -331,7 +351,15 @@ export class MoeDatabase {
       SELECT m.*, t.name AS subject_name FROM maintenance_items m
       LEFT JOIN subjects t ON t.id = m.subject_id
       ${where}
-      ORDER BY m.due_date, m.created_at
+      ORDER BY
+        CASE WHEN json_extract(m.due_json, '$.date') IS NULL AND m.check_on IS NULL THEN 1 ELSE 0 END,
+        CASE
+          WHEN json_extract(m.due_json, '$.date') IS NULL THEN m.check_on
+          WHEN m.check_on IS NULL THEN json_extract(m.due_json, '$.date')
+          WHEN json_extract(m.due_json, '$.date') <= m.check_on THEN json_extract(m.due_json, '$.date')
+          ELSE m.check_on
+        END,
+        m.created_at
     `).all(...values);
     return rows.map((row) => this.mapMaintenance(row as Record<string, unknown>));
   }
@@ -347,6 +375,8 @@ export class MoeDatabase {
   createMaintenance(input: {
     subjectId?: string | null;
     title: string;
+    due?: { date?: string; condition?: string };
+    checkOn?: string | null;
     dueDate?: string;
     /** @deprecated Compatibility for old fixtures; converted immediately to a concrete date. */
     timing?: Timing;
@@ -355,12 +385,12 @@ export class MoeDatabase {
   }): MaintenanceItem {
     const id = randomUUID();
     const createdAt = now();
-    const dueDate = input.dueDate ?? legacyTimingDate(input.timing ?? "later");
+    const due = normalizeDue(input.due ?? { date: input.dueDate ?? legacyTimingDate(input.timing ?? "later") }, input.checkOn);
     this.sqlite.prepare(`
       INSERT INTO maintenance_items
-        (id, subject_id, title, status, due_date, rationale, data_json, completed_at, created_at, updated_at)
-      VALUES (?, ?, ?, 'active', ?, ?, ?, NULL, ?, ?)
-    `).run(id, input.subjectId ?? null, input.title.trim(), dueDate, input.rationale ?? null, stringify(input.data ?? {}), createdAt, createdAt);
+        (id, subject_id, title, status, due_json, check_on, rationale, data_json, completed_at, created_at, updated_at)
+      VALUES (?, ?, ?, 'active', ?, ?, ?, ?, NULL, ?, ?)
+    `).run(id, input.subjectId ?? null, input.title.trim(), stringify(due), input.checkOn ?? null, input.rationale ?? null, stringify(input.data ?? {}), createdAt, createdAt);
     return this.getMaintenance(id)!;
   }
 
@@ -368,6 +398,8 @@ export class MoeDatabase {
     subjectId?: string | null;
     title?: string;
     status?: MaintenanceStatus;
+    due?: { date?: string; condition?: string };
+    checkOn?: string | null;
     dueDate?: string;
     /** @deprecated Compatibility for old fixtures; converted immediately to a concrete date. */
     timing?: Timing;
@@ -386,17 +418,20 @@ export class MoeDatabase {
     const nextData = input.data ? { ...current.data, ...input.data } : current.data;
     const nextSubjectId = input.subjectId === undefined ? current.subjectId : input.subjectId;
     const nextTitle = input.title?.trim() ?? current.title;
-    const dueDate = input.dueDate ?? (input.timing ? legacyTimingDate(input.timing) : current.dueDate);
+    const due = normalizeDue(input.due ?? (input.dueDate || input.timing
+      ? { ...current.due, date: input.dueDate ?? legacyTimingDate(input.timing!) }
+      : current.due), input.checkOn === undefined ? current.checkOn : input.checkOn);
     this.sqlite.exec("BEGIN");
     try {
       this.sqlite.prepare(`
-        UPDATE maintenance_items SET subject_id = ?, title = ?, status = ?, due_date = ?, rationale = ?, data_json = ?, completed_at = ?, updated_at = ?
+        UPDATE maintenance_items SET subject_id = ?, title = ?, status = ?, due_json = ?, check_on = ?, rationale = ?, data_json = ?, completed_at = ?, updated_at = ?
         WHERE id = ?
       `).run(
         nextSubjectId,
         nextTitle,
         input.status ?? current.status,
-        dueDate,
+        stringify(due),
+        input.checkOn === undefined ? current.checkOn : input.checkOn,
         input.rationale === undefined ? current.rationale : input.rationale,
         stringify(nextData),
         completedAt,
@@ -497,8 +532,9 @@ export class MoeDatabase {
       subjectName: row.subject_name ? String(row.subject_name) : null,
       title: String(row.title),
       status: String(row.status) as MaintenanceStatus,
-      timing: timingForDate(String(row.due_date)),
-      dueDate: String(row.due_date),
+      due: parseJson<{ date?: string; condition?: string }>(row.due_json, {}),
+      checkOn: row.check_on ? String(row.check_on) : null,
+      timing: timingForMaintenance(parseJson<{ date?: string }>(row.due_json, {}), row.check_on ? String(row.check_on) : null),
       rationale: row.rationale ? String(row.rationale) : null,
       data: parseJson<JsonObject>(row.data_json, {}),
       completedAt: row.completed_at ? String(row.completed_at) : null,

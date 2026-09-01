@@ -57,6 +57,18 @@ const nullableStringSchema = { type: ["string", "null"] };
 const booleanSchema = { type: "boolean" };
 const dateSchema = { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$", description: "Calendar date in YYYY-MM-DD format; never a timestamp." };
 const jsonObjectSchema = { type: "object", additionalProperties: true };
+const dueSchema = objectSchema({ date: dateSchema, condition: stringSchema });
+
+function due(input: Input, required = false): { date?: string; condition?: string } | undefined {
+  if (input.due === undefined && !required) return undefined;
+  const value = object(input.due);
+  const result = {
+    date: string(value, "date", false),
+    condition: string(value, "condition", false),
+  };
+  if (!result.date && !result.condition) throw new Error("due must include date or condition");
+  return result;
+}
 
 export function createApplicationTools(db: MoeDatabase): ToolMap {
   return {
@@ -218,15 +230,16 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
       handler: (raw) => db.listMaintenance({ subjectId: string(object(raw), "subject_id", false) }),
     },
     create_maintenance: {
-      description: "Create a useful future maintenance item at the granularity the user acts on. Always choose an honest calendar due date from available evidence; do not guess from mileage, season, or an interval when its starting point is unknown. Composite items can retain source and included operations in details.",
+      description: "Create a useful future maintenance item at the granularity the user acts on. due.date is only for an honest known calendar deadline; due.condition describes mileage, seasonal, observed, or otherwise conditional criteria in concise prose. Use check_on to bring condition-only or unresolved work back to attention without pretending the work itself is due then. Composite items can retain source and included operations in details.",
       parameters: objectSchema({
         subject_id: stringSchema,
         title: stringSchema,
-        due_date: dateSchema,
+        due: dueSchema,
+        check_on: dateSchema,
         rationale: nullableStringSchema,
         source: nullableStringSchema,
         details: jsonObjectSchema,
-      }, ["title", "due_date"]),
+      }, ["title", "due"]),
       handler: (raw) => {
         const input = object(raw);
         const source = nullableString(input, "source");
@@ -234,7 +247,8 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
         return db.createMaintenance({
           subjectId: string(input, "subject_id", false),
           title: string(input, "title")!,
-          dueDate: string(input, "due_date")!,
+          due: due(input, true),
+          checkOn: string(input, "check_on", false),
           rationale: nullableString(input, "rationale"),
           data: {
             ...(source === undefined ? {} : { source }),
@@ -244,13 +258,14 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
       },
     },
     update_maintenance: {
-      description: "Update, reschedule, archive, or complete a planned maintenance item. Reschedule with a concrete due_date, never a vague bucket. Archive an obsolete intention without recording completion. source and details edit the plan. On completion, completion_summary, completion_source, and completion_details describe what actually happened; the application atomically records them in a linked canonical Event without overwriting the plan.",
+      description: "Update, reschedule, archive, or complete a planned maintenance item. Replace due with honest date and/or prose condition criteria; use check_on to schedule MOE's next review and null to clear it. Never invent a due date for ordering. Archive an obsolete intention without recording completion. source and details edit the plan. On completion, completion fields describe what actually happened; the application atomically records them in a linked canonical Event without overwriting the plan.",
       parameters: objectSchema({
         id: stringSchema,
         subject_id: nullableStringSchema,
         title: stringSchema,
         status: { type: "string", enum: ["active", "done", "archived"] },
-        due_date: dateSchema,
+        due: dueSchema,
+        check_on: { type: ["string", "null"], pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
         rationale: nullableStringSchema,
         occurred_at: stringSchema,
         source: nullableStringSchema,
@@ -283,7 +298,8 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
           subjectId: nullableString(input, "subject_id"),
           title: string(input, "title", false),
           status,
-          dueDate: string(input, "due_date", false),
+          due: due(input),
+          checkOn: nullableString(input, "check_on"),
           rationale: nullableString(input, "rationale"),
           occurredAt: string(input, "occurred_at", false),
           data,

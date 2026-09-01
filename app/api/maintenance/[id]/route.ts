@@ -13,8 +13,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       ? (() => {
           const current = db.getMaintenance(id);
           if (!current) return null;
-          const base = current.dueDate < dateOnly() ? dateOnly() : current.dueDate;
-          return db.updateMaintenance(id, { dueDate: addMonths(base, 1) });
+          if (current.due.date) {
+            const base = current.due.date < dateOnly() ? dateOnly() : current.due.date;
+            return db.updateMaintenance(id, { due: { ...current.due, date: addMonths(base, 1) } });
+          }
+          const base = current.checkOn && current.checkOn >= dateOnly() ? current.checkOn : dateOnly();
+          return db.updateMaintenance(id, { checkOn: addMonths(base, 1) });
         })()
       : null;
 

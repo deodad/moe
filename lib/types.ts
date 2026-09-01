@@ -1,4 +1,4 @@
-export type Timing = "overdue" | "this_week" | "this_month" | "later";
+export type Timing = "overdue" | "this_week" | "this_month" | "later" | "watching";
 export type MaintenanceStatus = "active" | "done" | "archived";
 
 export type Subject = {
@@ -28,7 +28,11 @@ export type MaintenanceItem = {
   title: string;
   status: MaintenanceStatus;
   timing: Timing;
-  dueDate: string;
+  due: {
+    date?: string;
+    condition?: string;
+  };
+  checkOn: string | null;
   rationale: string | null;
   data: Record<string, unknown>;
   completedAt: string | null;

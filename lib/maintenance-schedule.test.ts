@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addMonths, friendlyDueDate, timingForDate } from "@/lib/maintenance-schedule";
+import { addMonths, friendlyDueDate, maintenanceScheduleLabel, timingForDate, timingForMaintenance } from "@/lib/maintenance-schedule";
 
 describe("maintenance scheduling", () => {
   it("derives attention buckets from calendar dates", () => {
@@ -19,5 +19,12 @@ describe("maintenance scheduling", () => {
 
   it("reschedules by a real calendar month", () => {
     expect(addMonths("2026-01-31", 1)).toBe("2026-02-28");
+  });
+
+  it("uses check-on dates for attention without claiming the work is due", () => {
+    expect(timingForMaintenance({ condition: "Before the first freeze" }, "2026-09-22", "2026-09-01")).toBe("this_month");
+    expect(maintenanceScheduleLabel({ condition: "Before the first freeze" }, "2026-09-22", "2026-08-31")).toBe("Check in 3 weeks");
+    expect(timingForMaintenance({ condition: "When visibly worn" }, null, "2026-08-31")).toBe("watching");
+    expect(maintenanceScheduleLabel({ condition: "When visibly worn" }, null, "2026-08-31")).toBe("Watching");
   });
 });

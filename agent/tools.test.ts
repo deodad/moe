@@ -84,7 +84,7 @@ describe("application tools", () => {
     const firstService = await call(tools, "create_maintenance", {
       subject_id: subject.id,
       title: "5,000-mile service",
-      due_date: "2026-10-15",
+      due: { date: "2026-10-15", condition: "At 5,000 miles" },
       rationale: "Initial Toyota service interval.",
       source: "Toyota maintenance guide",
       details: { operations: ["Rotate tires", "Inspect brakes"] },
@@ -105,7 +105,8 @@ describe("application tools", () => {
     await call(tools, "create_maintenance", {
       subject_id: subject.id,
       title: "10,000-mile service",
-      due_date: "2027-02-15",
+      due: { condition: "At 10,000 miles" },
+      check_on: "2027-02-15",
       rationale: "Next shop service interval.",
     });
 
