@@ -161,9 +161,11 @@ flowchart TD
     T[Subject: what is maintained]
     E[Event: what happened]
     M[MaintenanceItem: what deserves attention]
+    A[Artifact: a durable work product]
     C[Conversation: retained discussion]
     T --> E
     T --> M
+    T --> A
     C --> T
     C --> E
     C --> M
@@ -172,6 +174,7 @@ flowchart TD
 - **Subject** — something worth independently maintaining and surfacing.
 - **Event** — a durable historical fact: purchased, inspected, changed, repaired, or observed.
 - **MaintenanceItem** — a future action or condition worthy of attention, at useful granularity.
+- **Artifact** — an agent-created document worth revisiting, such as a plan, report, comparison, or checklist. Artifacts can be attached to a Subject without becoming its canonical facts, history, or maintenance.
 - **Conversation** — a retained agent session that may concern one or many Subjects.
 
 Relations, attachments, provenance, and sources can connect these nouns where useful. Categories and attributes should remain loose until repeated product needs justify stronger structure.
@@ -202,6 +205,7 @@ The agent should operate the product through a small set of composable primitive
 Subjects:       search, get, create, update
 History:      get history, record event
 Maintenance:  list, create, update
+Artifacts:    get, create, update
 Knowledge:    search and inspect sources
 Media:        inspect images, video, and documents
 ```

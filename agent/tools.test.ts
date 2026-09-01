@@ -48,7 +48,7 @@ describe("application tools", () => {
     db.close();
   });
 
-  it("loads a Subject with its complete history and active maintenance", async () => {
+  it("loads a Subject with its artifacts, complete history, and active maintenance", async () => {
     const db = new MoeDatabase(":memory:", false);
     const tools = createApplicationTools(db);
     const subject = db.createSubject({ name: "4Runner", carePreferences: "Uses a Toyota shop." });
@@ -56,16 +56,42 @@ describe("application tools", () => {
       db.recordEvent({ subjectId: subject.id, summary: `Service record ${index + 1}` });
     }
     db.createMaintenance({ subjectId: subject.id, title: "Next Toyota service" });
+    db.createArtifact({ subjectId: subject.id, title: "Long-term ownership plan", content: "# Long-term ownership" });
 
     const context = await call(tools, "get_subject", { id: subject.id }) as {
       subject: { id: string };
+      artifacts: unknown[];
       history: unknown[];
       maintenance: unknown[];
     };
 
     expect(context.subject.id).toBe(subject.id);
+    expect(context.artifacts).toHaveLength(1);
     expect(context.history).toHaveLength(12);
     expect(context.maintenance).toHaveLength(1);
+    db.close();
+  });
+
+  it("creates and revises an artifact for a Subject", async () => {
+    const db = new MoeDatabase(":memory:", false);
+    const tools = createApplicationTools(db);
+    const subject = db.createSubject({ name: "House" });
+
+    const artifact = await call(tools, "create_artifact", {
+      subject_id: subject.id,
+      title: "Kitchen renovation plan",
+      content: "# Kitchen renovation\n\n## Next step\n\nPhotograph each wall.",
+    }) as { id: string };
+    await call(tools, "update_artifact", {
+      id: artifact.id,
+      content: "# Kitchen renovation\n\n## Next step\n\nMeasure the room.",
+    });
+
+    expect(await call(tools, "get_artifact", { id: artifact.id })).toMatchObject({
+      subjectId: subject.id,
+      title: "Kitchen renovation plan",
+      content: "# Kitchen renovation\n\n## Next step\n\nMeasure the room.",
+    });
     db.close();
   });
 
@@ -136,6 +162,9 @@ describe("application tools", () => {
       "update_subject",
       "archive_subject",
       "merge_subjects",
+      "get_artifact",
+      "create_artifact",
+      "update_artifact",
       "get_history",
       "record_event",
       "update_event",

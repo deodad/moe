@@ -46,6 +46,25 @@ describe("MoeDatabase", () => {
     db.close();
   });
 
+  it("creates and updates a document artifact attached to a Subject", () => {
+    const db = new MoeDatabase(":memory:", false);
+    const subject = db.createSubject({ name: "House" });
+    const artifact = db.createArtifact({
+      subjectId: subject.id,
+      title: "Kitchen renovation plan",
+      content: "# Kitchen renovation\n\n## Next step\n\nMeasure the room.",
+    });
+
+    expect(db.listArtifacts(subject.id)).toEqual([artifact]);
+    expect(db.updateArtifact(artifact.id, { content: "# Kitchen renovation\n\nPhotograph each wall." })).toMatchObject({
+      title: "Kitchen renovation plan",
+      content: "# Kitchen renovation\n\nPhotograph each wall.",
+      subjectId: subject.id,
+      subjectName: "House",
+    });
+    db.close();
+  });
+
   it("records one linked canonical Event without overwriting the completed plan", () => {
     const db = new MoeDatabase(":memory:", false);
     const subject = db.createSubject({ name: "Road bike" });
@@ -110,6 +129,7 @@ describe("MoeDatabase", () => {
     const first = new MoeDatabase(path, false);
     const subject = first.createSubject({ name: "2026 4Runner", carePreferences: "Keep forever." });
     first.recordEvent({ subjectId: subject.id, summary: "Purchased" });
+    const artifact = first.createArtifact({ subjectId: subject.id, title: "Ownership plan", content: "# Ownership plan" });
     first.createMaintenance({ subjectId: subject.id, title: "5,000-mile service", timing: "later" });
     const conversation = first.createConversation("New 4Runner");
     first.saveConversation(conversation.id, {
@@ -121,6 +141,7 @@ describe("MoeDatabase", () => {
     const reopened = new MoeDatabase(path, false);
     expect(reopened.searchSubjects("2026")[0].carePreferences).toBe("Keep forever.");
     expect(reopened.getHistory(subject.id)[0].summary).toBe("Purchased");
+    expect(reopened.getArtifact(artifact.id)?.content).toBe("# Ownership plan");
     expect(reopened.listMaintenance({ subjectId: subject.id })[0].title).toBe("5,000-mile service");
     expect(reopened.getConversation(conversation.id)?.messages[0].text).toBe("I just bought it");
     expect(reopened.getConversationSnapshot(conversation.id)).toEqual({ version: 1, history: [] });
@@ -242,6 +263,7 @@ describe("MoeDatabase", () => {
     });
     const specific = db.createSubject({ name: "Dyson V12", attributes: { brand: "Dyson", model: "V12" } });
     db.recordEvent({ subjectId: generic.id, summary: "Filter cleaned" });
+    db.createArtifact({ subjectId: generic.id, title: "Care guide", content: "# Care guide" });
     db.createMaintenance({ subjectId: specific.id, title: "Clean brush bar" });
 
     const merged = db.mergeSubjects({
@@ -256,10 +278,11 @@ describe("MoeDatabase", () => {
     });
 
     expect(db.listSubjects()).toEqual([merged.subject]);
-    expect(merged).toMatchObject({ eventsMoved: 1, maintenanceMoved: 0 });
+    expect(merged).toMatchObject({ eventsMoved: 1, maintenanceMoved: 0, artifactsMoved: 1 });
     expect(merged.subject.attributes).toEqual({ brand: "Dyson", model: "V12 Detect Slim", retailer: "Costco" });
     expect(merged.absorbedSubject).toMatchObject({ archivedAt: expect.any(String), mergedIntoId: specific.id });
     expect(db.getHistory(specific.id)).toHaveLength(1);
+    expect(db.listArtifacts(specific.id)).toHaveLength(1);
     expect(db.listMaintenance({ subjectId: specific.id })).toHaveLength(1);
     db.close();
   });

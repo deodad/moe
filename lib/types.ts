@@ -12,6 +12,16 @@ export type Subject = {
   createdAt: string;
 };
 
+export type Artifact = {
+  id: string;
+  subjectId: string;
+  subjectName: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type HistoryEvent = {
   id: string;
   subjectId: string | null;
@@ -67,6 +77,7 @@ export type Conversation = {
 
 export type AppState = {
   subjects: Subject[];
+  artifacts: Artifact[];
   events: HistoryEvent[];
   maintenance: MaintenanceItem[];
   conversations: Conversation[];

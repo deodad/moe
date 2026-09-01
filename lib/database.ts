@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import type {
   AppState,
+  Artifact,
   ChatMessage,
   Conversation,
   HistoryEvent,
@@ -91,6 +92,14 @@ export class MoeDatabase {
         occurred_at TEXT NOT NULL,
         data_json TEXT NOT NULL DEFAULT '{}',
         created_at TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS artifacts (
+        id TEXT PRIMARY KEY,
+        subject_id TEXT NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
       );
       CREATE TABLE IF NOT EXISTS maintenance_items (
         id TEXT PRIMARY KEY,
@@ -264,6 +273,9 @@ export class MoeDatabase {
     const maintenanceMoved = Number(
       (this.sqlite.prepare("SELECT COUNT(*) AS count FROM maintenance_items WHERE subject_id = ?").get(input.absorbId) as { count: number }).count,
     );
+    const artifactsMoved = Number(
+      (this.sqlite.prepare("SELECT COUNT(*) AS count FROM artifacts WHERE subject_id = ?").get(input.absorbId) as { count: number }).count,
+    );
     const mergedAt = now();
 
     this.sqlite.exec("BEGIN");
@@ -280,6 +292,8 @@ export class MoeDatabase {
       this.sqlite.prepare("UPDATE events SET subject_id = ? WHERE subject_id = ?").run(input.keepId, input.absorbId);
       this.sqlite.prepare("UPDATE maintenance_items SET subject_id = ?, updated_at = ? WHERE subject_id = ?")
         .run(input.keepId, mergedAt, input.absorbId);
+      this.sqlite.prepare("UPDATE artifacts SET subject_id = ?, updated_at = ? WHERE subject_id = ?")
+        .run(input.keepId, mergedAt, input.absorbId);
       this.sqlite.prepare("UPDATE subjects SET archived_at = ?, merged_into_id = ? WHERE id = ?")
         .run(mergedAt, input.keepId, input.absorbId);
       this.sqlite.exec("COMMIT");
@@ -293,7 +307,54 @@ export class MoeDatabase {
       absorbedSubject: this.getSubject(input.absorbId)!,
       eventsMoved,
       maintenanceMoved,
+      artifactsMoved,
     };
+  }
+
+  listArtifacts(subjectId?: string): Artifact[] {
+    const rows = subjectId
+      ? this.sqlite.prepare(`
+          SELECT a.*, s.name AS subject_name FROM artifacts a
+          JOIN subjects s ON s.id = a.subject_id
+          WHERE a.subject_id = ? ORDER BY a.updated_at DESC
+        `).all(subjectId)
+      : this.sqlite.prepare(`
+          SELECT a.*, s.name AS subject_name FROM artifacts a
+          JOIN subjects s ON s.id = a.subject_id
+          ORDER BY a.updated_at DESC
+        `).all();
+    return rows.map((row) => this.mapArtifact(row as Record<string, unknown>));
+  }
+
+  getArtifact(id: string): Artifact | null {
+    const row = this.sqlite.prepare(`
+      SELECT a.*, s.name AS subject_name FROM artifacts a
+      JOIN subjects s ON s.id = a.subject_id WHERE a.id = ?
+    `).get(id);
+    return row ? this.mapArtifact(row as Record<string, unknown>) : null;
+  }
+
+  createArtifact(input: { subjectId: string; title: string; content: string }): Artifact {
+    if (!this.getSubject(input.subjectId)) throw new Error("Subject not found");
+    const id = randomUUID();
+    const createdAt = now();
+    this.sqlite.prepare(`
+      INSERT INTO artifacts (id, subject_id, title, content, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(id, input.subjectId, input.title.trim(), input.content.trim(), createdAt, createdAt);
+    return this.getArtifact(id)!;
+  }
+
+  updateArtifact(id: string, input: { title?: string; content?: string }): Artifact | null {
+    const current = this.getArtifact(id);
+    if (!current) return null;
+    this.sqlite.prepare("UPDATE artifacts SET title = ?, content = ?, updated_at = ? WHERE id = ?").run(
+      input.title?.trim() ?? current.title,
+      input.content?.trim() ?? current.content,
+      now(),
+      id,
+    );
+    return this.getArtifact(id);
   }
 
   getHistory(subjectId?: string | null): HistoryEvent[] {
@@ -495,6 +556,7 @@ export class MoeDatabase {
   getState(): AppState {
     return {
       subjects: this.listSubjects(),
+      artifacts: this.listArtifacts(),
       events: this.getHistory(),
       maintenance: this.listMaintenance(),
       conversations: this.listConversations(),
@@ -511,6 +573,18 @@ export class MoeDatabase {
       archivedAt: row.archived_at ? String(row.archived_at) : null,
       mergedIntoId: row.merged_into_id ? String(row.merged_into_id) : null,
       createdAt: String(row.created_at),
+    };
+  }
+
+  private mapArtifact(row: Record<string, unknown>): Artifact {
+    return {
+      id: String(row.id),
+      subjectId: String(row.subject_id),
+      subjectName: String(row.subject_name),
+      title: String(row.title),
+      content: String(row.content),
+      createdAt: String(row.created_at),
+      updatedAt: String(row.updated_at),
     };
   }
 

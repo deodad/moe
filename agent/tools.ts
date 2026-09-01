@@ -81,13 +81,18 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
       },
     },
     get_subject: {
-      description: "Get one Subject, its active maintenance, and complete Event history. Treat history as evidence for current readings, prior work, condition, and findings rather than copying those facts into Subject attributes.",
+      description: "Get one Subject, its attached artifacts, active maintenance, and complete Event history. Treat history as evidence for current readings, prior work, condition, and findings rather than copying those facts into Subject attributes.",
       parameters: objectSchema({ id: stringSchema }, ["id"]),
       handler: (raw) => {
         const id = string(object(raw), "id")!;
         const subject = db.getSubject(id);
         if (!subject) throw new Error("Subject not found");
-        return { subject, maintenance: db.listMaintenance({ subjectId: id }), history: db.getHistory(id) };
+        return {
+          subject,
+          artifacts: db.listArtifacts(id),
+          maintenance: db.listMaintenance({ subjectId: id }),
+          history: db.getHistory(id),
+        };
       },
     },
     create_subject: {
@@ -163,6 +168,48 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
             carePreferences: nullableString(survivor, "care_preferences")!,
           },
         });
+      },
+    },
+    get_artifact: {
+      description: "Read one durable document artifact attached to a Subject.",
+      parameters: objectSchema({ id: stringSchema }, ["id"]),
+      handler: (raw) => {
+        const artifact = db.getArtifact(string(object(raw), "id")!);
+        if (!artifact) throw new Error("Artifact not found");
+        return artifact;
+      },
+    },
+    create_artifact: {
+      description: "Create a durable Markdown document when the user asks for a named, inspectable work product such as a plan, report, comparison, or checklist. Attach it to the relevant Subject. Do not create an artifact for an ordinary answer.",
+      parameters: objectSchema({
+        subject_id: stringSchema,
+        title: stringSchema,
+        content: stringSchema,
+      }, ["subject_id", "title", "content"]),
+      handler: (raw) => {
+        const input = object(raw);
+        return db.createArtifact({
+          subjectId: string(input, "subject_id")!,
+          title: string(input, "title")!,
+          content: string(input, "content")!,
+        });
+      },
+    },
+    update_artifact: {
+      description: "Replace the title or Markdown content of an existing artifact when the user continues or revises that work product.",
+      parameters: objectSchema({
+        id: stringSchema,
+        title: stringSchema,
+        content: stringSchema,
+      }, ["id"]),
+      handler: (raw) => {
+        const input = object(raw);
+        const artifact = db.updateArtifact(string(input, "id")!, {
+          title: string(input, "title", false),
+          content: string(input, "content", false),
+        });
+        if (!artifact) throw new Error("Artifact not found");
+        return artifact;
       },
     },
     get_history: {

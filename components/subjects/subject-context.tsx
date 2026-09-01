@@ -1,13 +1,16 @@
-import type { HistoryEvent, MaintenanceItem, Subject } from "@/lib/types";
+import type { Artifact, HistoryEvent, MaintenanceItem, Subject } from "@/lib/types";
 import { shortDate } from "@/lib/utils";
 import { maintenanceScheduleLabel } from "@/lib/maintenance-schedule";
+import { ArtifactCard } from "@/components/artifacts/artifact-card";
 
 export function SubjectContext({
   subject,
+  artifacts,
   maintenance,
   history,
 }: {
   subject: Subject;
+  artifacts: Artifact[];
   maintenance: MaintenanceItem[];
   history: HistoryEvent[];
 }) {
@@ -47,6 +50,18 @@ export function SubjectContext({
           <p className="text-sm leading-6">{subject.carePreferences}</p>
         </section>
       )}
+
+      <section className="px-4 py-3">
+        <div className="mb-2 flex items-baseline justify-between gap-3">
+          <p className="font-mono text-[0.68rem] tracking-wide text-muted-foreground uppercase">Artifacts</p>
+          <span className="font-mono text-xs text-muted-foreground">{artifacts.length}</span>
+        </div>
+        {artifacts.length ? (
+          <div className="space-y-2">
+            {artifacts.map((artifact) => <ArtifactCard key={artifact.id} artifact={artifact} />)}
+          </div>
+        ) : <p className="text-sm text-muted-foreground">No documents yet.</p>}
+      </section>
 
       <section className="px-4 py-3">
         <div className="mb-2 flex items-baseline justify-between gap-3">

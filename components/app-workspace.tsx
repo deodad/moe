@@ -2,7 +2,7 @@
 
 import { Fragment, FormEvent, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import type { AppState, ChatMessage, MaintenanceItem, Subject, ToolActivity } from "@/lib/types";
+import type { AppState, Artifact, ChatMessage, MaintenanceItem, Subject, ToolActivity } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ import { MaintenanceCard } from "@/components/maintenance/maintenance-card";
 import { MaintenanceRow } from "@/components/maintenance/maintenance-row";
 import { SubjectCard } from "@/components/subjects/subject-card";
 import { SubjectContext } from "@/components/subjects/subject-context";
+import { ArtifactCard } from "@/components/artifacts/artifact-card";
 import { currentConversationSubjectId } from "@/lib/conversation-subject";
 
 type View = "chat" | "subjects" | "maintenance";
@@ -57,6 +58,9 @@ const activityFields: Record<string, string> = {
   update_subject: "Item updated",
   archive_subject: "Item archived",
   merge_subjects: "Items merged",
+  get_artifact: "Document opened",
+  create_artifact: "Document created",
+  update_artifact: "Document updated",
   get_history: "History checked",
   record_event: "Event logged",
   update_event: "Event corrected",
@@ -90,6 +94,12 @@ function resultMaintenance(result: unknown): MaintenanceItem[] {
   return candidates.filter((item) => item && typeof item === "object" && "timing" in item && (item as MaintenanceItem).status === "active") as MaintenanceItem[];
 }
 
+function resultArtifact(result: unknown): Artifact | null {
+  const candidate = asRecord(parseToolResult(result));
+  if (!candidate || !("content" in candidate) || !("subjectId" in candidate) || !("title" in candidate)) return null;
+  return candidate as unknown as Artifact;
+}
+
 /** Plain-language description of what a tool call did, for the activity record row. */
 function describeActivity(activity: ToolActivity): string {
   const args = activity.arguments ?? {};
@@ -98,6 +108,10 @@ function describeActivity(activity: ToolActivity): string {
     case "create_subject":
     case "update_subject":
       return String(args.name ?? result?.name ?? "—");
+    case "get_artifact":
+    case "create_artifact":
+    case "update_artifact":
+      return String(args.title ?? result?.title ?? "—");
     case "archive_subject":
       return String(result?.name ?? "—");
     case "record_event":
@@ -137,6 +151,7 @@ function ToolActivityView({ activity, onMaintenanceAction }: {
 }) {
   const subject = resultSubject(activity.result);
   const maintenance = resultMaintenance(activity.result);
+  const artifact = resultArtifact(activity.result);
   const field = activityFields[activity.tool] ?? activity.tool.replaceAll("_", " ");
   const value = describeActivity(activity);
 
@@ -153,6 +168,7 @@ function ToolActivityView({ activity, onMaintenanceAction }: {
         )}
       </div>
       {subject && <SubjectCard subject={subject} compact />}
+      {artifact && <ArtifactCard artifact={artifact} open />}
       {maintenance.length > 0 && (
         <div className="space-y-2">{maintenance.slice(0, 3).map((item) => <MaintenanceCard key={item.id} item={item} onAction={onMaintenanceAction} />)}</div>
       )}
@@ -420,6 +436,7 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
                   <div className="pb-3">
                     <SubjectContext
                       subject={contextSubject}
+                      artifacts={state.artifacts.filter((item) => item.subjectId === contextSubject.id)}
                       maintenance={state.maintenance.filter((item) => item.subjectId === contextSubject.id)}
                       history={state.events.filter((item) => item.subjectId === contextSubject.id)}
                     />
@@ -450,6 +467,7 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
                       </select>}
                       <SubjectContext
                         subject={contextSubject}
+                        artifacts={state.artifacts.filter((item) => item.subjectId === contextSubject.id)}
                         maintenance={state.maintenance.filter((item) => item.subjectId === contextSubject.id)}
                         history={state.events.filter((item) => item.subjectId === contextSubject.id)}
                       />

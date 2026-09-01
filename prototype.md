@@ -231,6 +231,7 @@ For the first real persistent version:
 Subject
 Event
 MaintenanceItem
+Artifact
 Conversation
 ```
 
@@ -291,6 +292,19 @@ Enough information to restore/resume an agent conversation.
 
 Keep the actual schema loose and easy to change.
 
+## Artifact
+
+An agent-created Markdown document attached to one Subject. Use an Artifact for a named, inspectable work product the user may revisit, such as a maintenance plan, project plan, report, comparison, or checklist. Artifacts are viewable in the Subject workspace but do not replace Subject facts, Event history, or MaintenanceItems.
+
+```text
+id
+subject_id
+title
+content
+```
+
+Do not build generic relations, user authoring, structured database links, or multiple artifact formats yet.
+
 ---
 
 # Minimal agent tools
@@ -317,6 +331,11 @@ Maintenance
   list_maintenance
   create_maintenance
   update_maintenance
+
+Artifacts
+  get_artifact
+  create_artifact
+  update_artifact
 ```
 
 Avoid generic graph primitives for now.
