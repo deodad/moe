@@ -7,6 +7,7 @@ export type Subject = {
   category: string | null;
   attributes: Record<string, string>;
   carePreferences: string | null;
+  agentContext: string | null;
   archivedAt: string | null;
   mergedIntoId: string | null;
   createdAt: string;

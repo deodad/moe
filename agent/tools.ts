@@ -81,7 +81,7 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
       },
     },
     get_subject: {
-      description: "Get one Subject, its attached artifacts, active maintenance, and complete Event history. Treat history as evidence for current readings, prior work, condition, and findings rather than copying those facts into Subject attributes.",
+      description: "Get one Subject, its revisable agent context, attached artifacts, active maintenance, and complete Event history. Canonical attributes and Events outrank agent context when they conflict.",
       parameters: objectSchema({ id: stringSchema }, ["id"]),
       handler: (raw) => {
         const id = string(object(raw), "id")!;
@@ -102,6 +102,7 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
         category: nullableStringSchema,
         attributes: { type: "object", additionalProperties: { type: "string" } },
         care_preferences: nullableStringSchema,
+        agent_context: nullableStringSchema,
       }, ["name"]),
       handler: (raw) => {
         const input = object(raw);
@@ -110,17 +111,19 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
           category: nullableString(input, "category"),
           attributes: record(input, "attributes"),
           carePreferences: nullableString(input, "care_preferences"),
+          agentContext: nullableString(input, "agent_context"),
         });
       },
     },
     update_subject: {
-      description: "Update a Subject's identity, attributes, or natural-language care preferences. Care preferences describe how the user wants to care for it, not uncertain identity or research notes.",
+      description: "Update a Subject's identity, attributes, natural-language care preferences, or complete revisable agent context. When changing agent_context, rewrite the whole concise brief and preserve still-relevant context; do not append a log.",
       parameters: objectSchema({
         id: stringSchema,
         name: stringSchema,
         category: nullableStringSchema,
         attributes: { type: "object", additionalProperties: { type: "string" } },
         care_preferences: nullableStringSchema,
+        agent_context: nullableStringSchema,
       }, ["id"]),
       handler: (raw) => {
         const input = object(raw);
@@ -129,6 +132,7 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
           category: nullableString(input, "category"),
           attributes: record(input, "attributes"),
           carePreferences: nullableString(input, "care_preferences"),
+          agentContext: nullableString(input, "agent_context"),
         });
         if (!updated) throw new Error("Subject not found");
         return updated;
@@ -153,7 +157,8 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
           category: nullableStringSchema,
           attributes: { type: "object", additionalProperties: { type: "string" } },
           care_preferences: nullableStringSchema,
-        }, ["name", "category", "attributes", "care_preferences"]),
+          agent_context: nullableStringSchema,
+        }, ["name", "category", "attributes", "care_preferences", "agent_context"]),
       }, ["keep_id", "absorb_id", "survivor"]),
       handler: (raw) => {
         const input = object(raw);
@@ -166,6 +171,7 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
             category: nullableString(survivor, "category")!,
             attributes: record(survivor, "attributes")!,
             carePreferences: nullableString(survivor, "care_preferences")!,
+            agentContext: nullableString(survivor, "agent_context")!,
           },
         });
       },

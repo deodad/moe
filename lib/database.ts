@@ -81,6 +81,7 @@ export class MoeDatabase {
         category TEXT,
         attributes_json TEXT NOT NULL DEFAULT '{}',
         care_preferences TEXT,
+        agent_context TEXT,
         archived_at TEXT,
         merged_into_id TEXT REFERENCES subjects(id) ON DELETE SET NULL,
         created_at TEXT NOT NULL
@@ -127,6 +128,7 @@ export class MoeDatabase {
       (this.sqlite.prepare("PRAGMA table_info(subjects)").all() as Array<{ name: string }>).map((column) => column.name),
     );
     if (!subjectColumns.has("archived_at")) this.sqlite.exec("ALTER TABLE subjects ADD COLUMN archived_at TEXT");
+    if (!subjectColumns.has("agent_context")) this.sqlite.exec("ALTER TABLE subjects ADD COLUMN agent_context TEXT");
     if (!subjectColumns.has("merged_into_id")) {
       this.sqlite.exec("ALTER TABLE subjects ADD COLUMN merged_into_id TEXT REFERENCES subjects(id) ON DELETE SET NULL");
     }
@@ -212,12 +214,21 @@ export class MoeDatabase {
     category?: string | null;
     attributes?: Record<string, string>;
     carePreferences?: string | null;
+    agentContext?: string | null;
   }): Subject {
     const id = randomUUID();
     const createdAt = now();
     this.sqlite
-      .prepare("INSERT INTO subjects (id, name, category, attributes_json, care_preferences, created_at) VALUES (?, ?, ?, ?, ?, ?)")
-      .run(id, input.name.trim(), input.category ?? null, stringify(input.attributes ?? {}), input.carePreferences ?? null, createdAt);
+      .prepare("INSERT INTO subjects (id, name, category, attributes_json, care_preferences, agent_context, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .run(
+        id,
+        input.name.trim(),
+        input.category ?? null,
+        stringify(input.attributes ?? {}),
+        input.carePreferences ?? null,
+        input.agentContext ?? null,
+        createdAt,
+      );
     return this.getSubject(id)!;
   }
 
@@ -226,17 +237,19 @@ export class MoeDatabase {
     category?: string | null;
     attributes?: Record<string, string>;
     carePreferences?: string | null;
+    agentContext?: string | null;
   }): Subject | null {
     const current = this.getSubject(id);
     if (!current) return null;
     const attributes = input.attributes ? { ...current.attributes, ...input.attributes } : current.attributes;
     this.sqlite
-      .prepare("UPDATE subjects SET name = ?, category = ?, attributes_json = ?, care_preferences = ? WHERE id = ?")
+      .prepare("UPDATE subjects SET name = ?, category = ?, attributes_json = ?, care_preferences = ?, agent_context = ? WHERE id = ?")
       .run(
         input.name?.trim() ?? current.name,
         input.category === undefined ? current.category : input.category,
         stringify(attributes),
         input.carePreferences === undefined ? current.carePreferences : input.carePreferences,
+        input.agentContext === undefined ? current.agentContext : input.agentContext,
         id,
       );
     return this.getSubject(id);
@@ -259,6 +272,7 @@ export class MoeDatabase {
       category: string | null;
       attributes: Record<string, string>;
       carePreferences: string | null;
+      agentContext: string | null;
     };
   }) {
     if (input.keepId === input.absorbId) throw new Error("Cannot merge a Subject into itself");
@@ -281,12 +295,13 @@ export class MoeDatabase {
     this.sqlite.exec("BEGIN");
     try {
       this.sqlite.prepare(`
-        UPDATE subjects SET name = ?, category = ?, attributes_json = ?, care_preferences = ? WHERE id = ?
+        UPDATE subjects SET name = ?, category = ?, attributes_json = ?, care_preferences = ?, agent_context = ? WHERE id = ?
       `).run(
         input.survivor.name.trim(),
         input.survivor.category,
         stringify(input.survivor.attributes),
         input.survivor.carePreferences,
+        input.survivor.agentContext,
         input.keepId,
       );
       this.sqlite.prepare("UPDATE events SET subject_id = ? WHERE subject_id = ?").run(input.keepId, input.absorbId);
@@ -570,6 +585,7 @@ export class MoeDatabase {
       category: row.category ? String(row.category) : null,
       attributes: parseJson<Record<string, string>>(row.attributes_json, {}),
       carePreferences: row.care_preferences ? String(row.care_preferences) : null,
+      agentContext: row.agent_context ? String(row.agent_context) : null,
       archivedAt: row.archived_at ? String(row.archived_at) : null,
       mergedIntoId: row.merged_into_id ? String(row.merged_into_id) : null,
       createdAt: String(row.created_at),

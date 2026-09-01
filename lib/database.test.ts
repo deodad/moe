@@ -127,7 +127,11 @@ describe("MoeDatabase", () => {
     directories.push(directory);
     const path = join(directory, "moe.db");
     const first = new MoeDatabase(path, false);
-    const subject = first.createSubject({ name: "2026 4Runner", carePreferences: "Keep forever." });
+    const subject = first.createSubject({
+      name: "2026 4Runner",
+      carePreferences: "Keep forever.",
+      agentContext: "User reported this is their first body-on-frame SUV. Off-road use is still unknown.",
+    });
     first.recordEvent({ subjectId: subject.id, summary: "Purchased" });
     const artifact = first.createArtifact({ subjectId: subject.id, title: "Ownership plan", content: "# Ownership plan" });
     first.createMaintenance({ subjectId: subject.id, title: "5,000-mile service", timing: "later" });
@@ -140,6 +144,7 @@ describe("MoeDatabase", () => {
 
     const reopened = new MoeDatabase(path, false);
     expect(reopened.searchSubjects("2026")[0].carePreferences).toBe("Keep forever.");
+    expect(reopened.searchSubjects("2026")[0].agentContext).toContain("Off-road use is still unknown");
     expect(reopened.getHistory(subject.id)[0].summary).toBe("Purchased");
     expect(reopened.getArtifact(artifact.id)?.content).toBe("# Ownership plan");
     expect(reopened.listMaintenance({ subjectId: subject.id })[0].title).toBe("5,000-mile service");
@@ -274,12 +279,14 @@ describe("MoeDatabase", () => {
         category: "Appliance",
         attributes: { brand: "Dyson", model: "V12 Detect Slim", retailer: "Costco" },
         carePreferences: "Group routine care.",
+        agentContext: "The Costco and V12 records were confirmed to describe the same physical vacuum.",
       },
     });
 
     expect(db.listSubjects()).toEqual([merged.subject]);
     expect(merged).toMatchObject({ eventsMoved: 1, maintenanceMoved: 0, artifactsMoved: 1 });
     expect(merged.subject.attributes).toEqual({ brand: "Dyson", model: "V12 Detect Slim", retailer: "Costco" });
+    expect(merged.subject.agentContext).toContain("same physical vacuum");
     expect(merged.absorbedSubject).toMatchObject({ archivedAt: expect.any(String), mergedIntoId: specific.id });
     expect(db.getHistory(specific.id)).toHaveLength(1);
     expect(db.listArtifacts(specific.id)).toHaveLength(1);

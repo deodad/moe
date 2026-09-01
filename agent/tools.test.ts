@@ -51,7 +51,11 @@ describe("application tools", () => {
   it("loads a Subject with its artifacts, complete history, and active maintenance", async () => {
     const db = new MoeDatabase(":memory:", false);
     const tools = createApplicationTools(db);
-    const subject = db.createSubject({ name: "4Runner", carePreferences: "Uses a Toyota shop." });
+    const subject = db.createSubject({
+      name: "4Runner",
+      carePreferences: "Uses a Toyota shop.",
+      agentContext: "User reported occasional towing; trailer weight is still unknown.",
+    });
     for (let index = 0; index < 12; index += 1) {
       db.recordEvent({ subjectId: subject.id, summary: `Service record ${index + 1}` });
     }
@@ -59,16 +63,40 @@ describe("application tools", () => {
     db.createArtifact({ subjectId: subject.id, title: "Long-term ownership plan", content: "# Long-term ownership" });
 
     const context = await call(tools, "get_subject", { id: subject.id }) as {
-      subject: { id: string };
+      subject: { id: string; agentContext: string | null };
       artifacts: unknown[];
       history: unknown[];
       maintenance: unknown[];
     };
 
     expect(context.subject.id).toBe(subject.id);
+    expect(context.subject.agentContext).toContain("trailer weight is still unknown");
     expect(context.artifacts).toHaveLength(1);
     expect(context.history).toHaveLength(12);
     expect(context.maintenance).toHaveLength(1);
+    db.close();
+  });
+
+  it("rewrites a Subject's freeform working context without turning it into canonical state", async () => {
+    const db = new MoeDatabase(":memory:", false);
+    const tools = createApplicationTools(db);
+    const subject = db.createSubject({ name: "2007 Toyota Tundra" });
+
+    await call(tools, "update_subject", {
+      id: subject.id,
+      agent_context: "User called the truck an old beater. Moe inferred they may prioritize essential reliability over cosmetic work, but this is unconfirmed. Whether it is 4WD remains unknown.",
+    });
+    await call(tools, "update_subject", {
+      id: subject.id,
+      agent_context: "User confirmed they prioritize essential reliability over cosmetic work. Whether it is 4WD remains unknown.",
+    });
+
+    expect(db.getSubject(subject.id)).toMatchObject({
+      attributes: {},
+      carePreferences: null,
+      agentContext: "User confirmed they prioritize essential reliability over cosmetic work. Whether it is 4WD remains unknown.",
+    });
+    expect(db.getHistory(subject.id)).toEqual([]);
     db.close();
   });
 
