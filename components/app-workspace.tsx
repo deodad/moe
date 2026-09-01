@@ -397,8 +397,8 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
         {(view === "chat" || view === "subjects") && (
           <div className="flex min-h-0 flex-1">
             {view === "subjects" && selectedSubject && (
-              <aside className="hidden w-[340px] shrink-0 border-r border-line-strong bg-muted/30 lg:flex lg:min-h-0 lg:flex-col">
-                <div className="border-b border-border p-3">
+              <aside className="hidden w-[340px] shrink-0 gap-3 bg-muted/30 p-3 lg:flex lg:min-h-0 lg:flex-col">
+                <div>
                   <label className="mb-1.5 block font-mono text-[0.68rem] tracking-wide text-muted-foreground uppercase" htmlFor="subject-switcher">
                     Inventory
                   </label>
@@ -412,11 +412,13 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
                   </select>
                 </div>
                 <ScrollArea className="min-h-0 flex-1">
-                  <SubjectContext
-                    subject={selectedSubject}
-                    maintenance={state.maintenance.filter((item) => item.subjectId === selectedSubject.id)}
-                    history={state.events.filter((item) => item.subjectId === selectedSubject.id)}
-                  />
+                  <div className="pb-3">
+                    <SubjectContext
+                      subject={selectedSubject}
+                      maintenance={state.maintenance.filter((item) => item.subjectId === selectedSubject.id)}
+                      history={state.events.filter((item) => item.subjectId === selectedSubject.id)}
+                    />
+                  </div>
                 </ScrollArea>
               </aside>
             )}
