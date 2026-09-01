@@ -1,11 +1,18 @@
-import { Box } from "lucide-react";
 import type { HistoryEvent, MaintenanceItem, Thing } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { shortDate } from "@/lib/utils";
 
 function describe(thing: Thing) {
   return [thing.attributes.year, thing.attributes.make, thing.attributes.model].filter(Boolean).join(" ");
+}
+
+/** Label column is 128px everywhere a field/value row appears (here and the chat activity record), so they align as one system. */
+function SpecRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-[128px_1fr] items-baseline gap-4 border-t border-border px-4 py-2.5 text-sm">
+      <span className="font-mono text-xs tracking-wide text-muted-foreground uppercase">{label}</span>
+      <div className="leading-6 text-foreground">{children}</div>
+    </div>
+  );
 }
 
 export function ThingCard({
@@ -23,59 +30,24 @@ export function ThingCard({
 
   if (compact) {
     return (
-      <Card size="sm">
-        <CardContent className="flex items-center gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-            <Box className="size-4" />
-          </span>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-foreground">{thing.name}</p>
-            <p className="truncate text-xs text-muted-foreground">{description || thing.category || "Thing"}</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-3 border border-border bg-card px-3 py-2.5">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-foreground">{thing.name}</p>
+          <p className="truncate font-mono text-xs tracking-wide text-muted-foreground uppercase">{description || thing.category || "Item"}</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="flex-row items-start justify-between">
-        <div>
-          <CardTitle className="text-xl">{thing.name}</CardTitle>
-          <CardDescription className="mt-1">{description || thing.category || "Maintained thing"}</CardDescription>
-        </div>
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
-          <Box className="size-4" />
-        </span>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-5">
-        {thing.carePreferences && (
-          <div>
-            <p className="text-[11px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">Care</p>
-            <p className="mt-2 text-sm leading-6 text-foreground">{thing.carePreferences}</p>
-          </div>
-        )}
-        {maintenance[0] && (
-          <>
-            <Separator />
-            <div>
-              <p className="text-[11px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">Upcoming</p>
-              <p className="mt-2 text-sm font-medium text-foreground">{maintenance[0].title}</p>
-            </div>
-          </>
-        )}
-        {history[0] && (
-          <>
-            <Separator />
-            <div>
-              <p className="text-[11px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">Recent</p>
-              <p className="mt-2 text-sm text-foreground">
-                {history[0].summary} · {shortDate(history[0].occurredAt)}
-              </p>
-            </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
+    <div className="border border-border bg-card">
+      <div className="flex items-baseline justify-between gap-3 border-b border-line-strong px-4 py-3">
+        <h2 className="text-lg font-semibold tracking-[-0.01em]">{thing.name}</h2>
+        <span className="font-mono text-xs tracking-wide text-muted-foreground uppercase">{description || thing.category || "Item"}</span>
+      </div>
+      {thing.carePreferences && <SpecRow label="Care">{thing.carePreferences}</SpecRow>}
+      {maintenance[0] && <SpecRow label="Upcoming">{maintenance[0].title}</SpecRow>}
+      {history[0] && <SpecRow label="Recent">{history[0].summary} · {shortDate(history[0].occurredAt)}</SpecRow>}
+    </div>
   );
 }

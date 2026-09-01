@@ -1,4 +1,3 @@
-import { Box, ChevronRight } from "lucide-react";
 import type { Thing } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -7,18 +6,12 @@ export function ThingListItem({ thing, selected, onClick }: { thing: Thing; sele
     <button
       onClick={onClick}
       className={cn(
-        "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition",
-        selected ? "border-primary/40 bg-accent ring-1 ring-primary/20" : "border-border bg-card hover:bg-accent/50",
+        "flex w-full flex-col border-b border-border px-3 py-2.5 text-left text-sm last:border-b-0",
+        selected ? "border-l-2 border-l-primary bg-accent pl-[calc(0.75rem-2px)] font-medium text-accent-foreground" : "hover:bg-muted/60",
       )}
     >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-        <Box className="size-4" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-foreground">{thing.name}</span>
-        <span className="block truncate text-xs text-muted-foreground">{thing.category ?? "Thing"}</span>
-      </span>
-      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+      <span className="truncate">{thing.name}</span>
+      <span className="truncate font-mono text-[0.68rem] tracking-wide text-muted-foreground uppercase">{thing.category ?? "Item"}</span>
     </button>
   );
 }
