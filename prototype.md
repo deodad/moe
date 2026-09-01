@@ -280,6 +280,8 @@ data
 
 MaintenanceItems describe future intent. Completion marks the item done and atomically creates a linked Event containing what actually happened; it does not replace the item's planned source or scope with completion facts.
 
+Archive an obsolete MaintenanceItem when the plan changes. Archived intentions leave the attention queue without being deleted or producing a false completion Event.
+
 ## Conversation
 
 Enough information to restore/resume an agent conversation.

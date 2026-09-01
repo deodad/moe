@@ -255,12 +255,12 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
       },
     },
     update_maintenance: {
-      description: "Update, defer, or complete a planned maintenance item. source and details edit the plan. On completion, completion_summary, completion_source, and completion_details describe what actually happened; the application atomically records them in a linked canonical Event without overwriting the plan.",
+      description: "Update, defer, archive, or complete a planned maintenance item. Archive an obsolete intention without recording completion. source and details edit the plan. On completion, completion_summary, completion_source, and completion_details describe what actually happened; the application atomically records them in a linked canonical Event without overwriting the plan.",
       parameters: objectSchema({
         id: stringSchema,
         thing_id: nullableStringSchema,
         title: stringSchema,
-        status: { type: "string", enum: ["active", "done"] },
+        status: { type: "string", enum: ["active", "done", "archived"] },
         timing: timingSchema,
         rationale: nullableStringSchema,
         occurred_at: stringSchema,

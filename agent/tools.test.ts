@@ -34,6 +34,20 @@ describe("application tools", () => {
     db.close();
   });
 
+  it("archives obsolete maintenance without creating history", async () => {
+    const db = new MoeDatabase(":memory:", false);
+    const tools = createApplicationTools(db);
+    const thing = db.createThing({ name: "Dyson V15 Detect" });
+    const item = db.createMaintenance({ thingId: thing.id, title: "Replace battery", timing: "later" });
+
+    await call(tools, "update_maintenance", { id: item.id, status: "archived" });
+
+    expect(db.getMaintenance(item.id)?.status).toBe("archived");
+    expect(db.listMaintenance({ thingId: thing.id })).toEqual([]);
+    expect(db.getHistory(thing.id)).toEqual([]);
+    db.close();
+  });
+
   it("supports the complete 4Runner flow with small primitives", async () => {
     const db = new MoeDatabase(":memory:", false);
     const tools = createApplicationTools(db);

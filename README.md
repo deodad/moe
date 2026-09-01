@@ -59,7 +59,7 @@ npm run test:e2e
 
 The end-to-end suite starts an isolated local database and uses the installed Google Chrome at desktop and phone viewport sizes.
 
-The model-behavior evals live under `evals/harbor`. `identification` checks deduplication, timely clarification, and Thing boundaries. `maintenance-mediation` measures whether research becomes a small plan at the right granularity. `maintenance-continuation` checks whether completed work and new findings keep an existing plan current without duplication. Each dataset README has run and inspection commands.
+The model-behavior evals live under `evals/harbor`. `identification` checks deduplication, timely clarification, and Thing boundaries. `maintenance-mediation` measures whether research becomes a small plan at the right granularity. `maintenance-revision` checks whether preference changes reshape an existing plan without fake history. `maintenance-continuation` checks whether completed work and new findings keep an existing plan current without duplication. Each dataset README has run and inspection commands.
 
 The main manual flow is:
 

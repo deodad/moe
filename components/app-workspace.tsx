@@ -86,7 +86,7 @@ function resultThing(result: unknown): Thing | null {
 function resultMaintenance(result: unknown): MaintenanceItem[] {
   const value = parseToolResult(result);
   const candidates = Array.isArray(value) ? value : asRecord(value) && "title" in (value as object) ? [value] : [];
-  return candidates.filter((item) => item && typeof item === "object" && "timing" in item) as MaintenanceItem[];
+  return candidates.filter((item) => item && typeof item === "object" && "timing" in item && (item as MaintenanceItem).status === "active") as MaintenanceItem[];
 }
 
 /** Plain-language description of what a tool call did, for the activity record row. */
@@ -105,7 +105,11 @@ function describeActivity(activity: ToolActivity): string {
     case "create_maintenance":
       return String(args.title ?? "—");
     case "update_maintenance":
-      return args.status === "done" ? `${String(args.title ?? result?.title ?? "item")} — done` : String(args.title ?? result?.title ?? "—");
+      return args.status === "done"
+        ? `${String(args.title ?? result?.title ?? "item")} — done`
+        : args.status === "archived"
+          ? `${String(args.title ?? result?.title ?? "item")} — archived`
+          : String(args.title ?? result?.title ?? "—");
     case "search_things":
     case "list_maintenance":
       return String(args.query ?? (args.thing_id ? "filtered by thing" : "all"));

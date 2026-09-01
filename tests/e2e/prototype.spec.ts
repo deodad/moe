@@ -32,11 +32,11 @@ test("desktop Things and Maintenance share durable state", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Maintenance", exact: true })).toBeVisible();
   await expect(page.getByText("5,000-mile service", { exact: true })).toBeVisible();
 
-  const serviceCard = page.getByText("5,000-mile service").locator("xpath=ancestor::div[.//button[normalize-space()='Done']][1]");
-  await serviceCard.getByRole("button", { name: "Done" }).click();
+  const serviceRow = page.getByRole("row").filter({ hasText: "5,000-mile service" });
+  await serviceRow.getByRole("button", { name: "Done" }).click();
   await expect(page.getByText("5,000-mile service", { exact: true })).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Things", exact: true }).click();
+  await page.getByRole("button", { name: "Inventory", exact: true }).click();
   await page.getByRole("button", { name: "4Runner Vehicle" }).click();
   await expect(page.getByText(/Keep long term/)).toBeVisible();
   await expect(page.getByText(/5,000-mile service completed/)).toBeVisible();
@@ -54,8 +54,8 @@ test("phone layout exposes all three surfaces without horizontal overflow", asyn
   await expect(page.getByRole("heading", { name: "What are we taking care of?" })).toBeVisible();
   await page.locator("nav").last().getByRole("button", { name: "Maintenance" }).click();
   await expect(page.getByRole("heading", { name: "Maintenance", exact: true })).toBeVisible();
-  await page.locator("nav").last().getByRole("button", { name: "Things" }).click();
-  await expect(page.getByRole("heading", { name: "Things", exact: true })).toBeVisible();
+  await page.locator("nav").last().getByRole("button", { name: "Inventory" }).click();
+  await expect(page.getByRole("heading", { name: "Inventory", exact: true })).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
   await page.screenshot({ path: "test-results/phone.png", fullPage: true });
@@ -69,9 +69,9 @@ test("chat streams a real Nanocodex tool turn into durable state", async ({ page
   await expect(page.getByText("I added your 2026 4Runner.", { exact: true })).toBeVisible();
   finishFixtureResponse?.();
   await expect(page.getByText("I added your 2026 4Runner and its first service interval.", { exact: true })).toBeVisible();
-  await expect(page.getByText("search things", { exact: true })).toBeVisible();
-  await expect(page.getByText("create thing", { exact: true })).toBeVisible();
-  await expect(page.getByText("create maintenance", { exact: true })).toBeVisible();
+  await expect(page.getByText("Searched inventory", { exact: true })).toBeVisible();
+  await expect(page.getByText("Item logged", { exact: true })).toBeVisible();
+  await expect(page.getByText("Maintenance logged", { exact: true })).toBeVisible();
   await fixtureScenario;
 
   const state = await page.evaluate(async () => fetch("/api/state").then((response) => response.json()));

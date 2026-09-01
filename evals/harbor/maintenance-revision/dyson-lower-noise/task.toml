@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/maintenance-revision-dyson-lower-noise"
+version = "0.1.0"
+description = "Reduce an overbuilt Dyson plan without fabricating completion history."
+keywords = ["moe", "maintenance", "revision", "preference", "appliance"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 180.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

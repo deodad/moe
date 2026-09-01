@@ -1,5 +1,5 @@
 export type Timing = "overdue" | "this_week" | "this_month" | "later";
-export type MaintenanceStatus = "active" | "done";
+export type MaintenanceStatus = "active" | "done" | "archived";
 
 export type Thing = {
   id: string;

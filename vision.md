@@ -188,6 +188,8 @@ Durable state should be immutable wherever practical. Persist a fact or intentio
 
 Completing maintenance should atomically create an Event linked to the planned item. The completed item preserves the plan; the Event preserves actual completion details. A technician's weak-capacitor finding and a future capacitor-replacement item are not competing sources of truth: one is historical evidence and the other is intended action.
 
+When a plan changes, archive intentions that are no longer useful instead of deleting them or marking them done. Archiving removes an item from attention but does not claim the work happened and does not create an Event.
+
 Current mileage, last service, recent findings, elapsed time since work, and similar summaries should normally be derived from Events when a Thing is inspected. Materialize a derived value only after repeated product behavior proves that recomputing it is insufficient.
 
 **Persist facts and intentions; derive current understanding.**

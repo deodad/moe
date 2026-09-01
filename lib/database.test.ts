@@ -64,6 +64,24 @@ describe("MoeDatabase", () => {
     db.close();
   });
 
+  it("archives an obsolete intention without recording completion", () => {
+    const db = new MoeDatabase(":memory:", false);
+    const thing = db.createThing({ name: "Dyson V15 Detect" });
+    const item = db.createMaintenance({
+      thingId: thing.id,
+      title: "Replace battery",
+      timing: "later",
+      rationale: "Speculative replacement reminder.",
+    });
+
+    const archived = db.updateMaintenance(item.id, { status: "archived" });
+
+    expect(archived).toMatchObject({ id: item.id, status: "archived", completedAt: null });
+    expect(db.listMaintenance({ thingId: thing.id })).toEqual([]);
+    expect(db.getHistory(thing.id)).toEqual([]);
+    db.close();
+  });
+
   it("persists Things, Events, MaintenanceItems, and Conversations after restart", () => {
     const directory = mkdtempSync(join(tmpdir(), "moe-database-"));
     directories.push(directory);

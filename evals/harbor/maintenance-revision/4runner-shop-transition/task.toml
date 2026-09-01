@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/maintenance-revision-4runner-shop-transition"
+version = "0.1.0"
+description = "Regroup separate 4Runner operations into composite shop visits."
+keywords = ["moe", "maintenance", "revision", "preference", "vehicle"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 180.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512
