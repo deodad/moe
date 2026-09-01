@@ -81,7 +81,7 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
       },
     },
     get_subject: {
-      description: "Get one Subject, its revisable agent context, attached artifacts, active maintenance, and complete Event history. Canonical attributes and Events outrank agent context when they conflict.",
+      description: "Get one Subject, its revisable agent context, attached artifacts, active maintenance, and complete Event history. Compare relevant canonical attributes and Events with agent context before answering. If they materially conflict, repair the complete agent_context with update_subject in the same turn; do not rewrite an accurate brief without useful new context.",
       parameters: objectSchema({ id: stringSchema }, ["id"]),
       handler: (raw) => {
         const id = string(object(raw), "id")!;

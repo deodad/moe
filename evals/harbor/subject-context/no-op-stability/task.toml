@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/subject-context-no-op-stability"
+version = "0.1.0"
+description = "Use accurate Subject context and history without an unnecessary memory rewrite."
+keywords = ["moe", "memory", "stability", "no-op"]
+
+[metadata]
+category = "product-agent"
+difficulty = "easy"
+
+[agent]
+timeout_sec = 120.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512
