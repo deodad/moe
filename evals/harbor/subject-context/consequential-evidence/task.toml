@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/subject-context-consequential-evidence"
+version = "0.1.0"
+description = "Check canonical evidence before consequential advice when working context conflicts."
+keywords = ["moe", "memory", "safety", "provenance"]
+
+[metadata]
+category = "product-agent"
+difficulty = "hard"
+
+[agent]
+timeout_sec = 120.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

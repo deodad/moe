@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/subject-context-confidence-preservation"
+version = "0.1.0"
+description = "Preserve uncertainty through repeated summarization instead of laundering an estimate into fact."
+keywords = ["moe", "memory", "uncertainty", "calibration"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 120.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

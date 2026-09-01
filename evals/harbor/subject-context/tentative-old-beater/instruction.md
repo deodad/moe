@@ -1,0 +1,1 @@
+{"case":"subject-context-tentative-old-beater","initialSubjects":[{"key":"truck","name":"2007 Toyota Tundra","category":"Vehicle","attributes":{"year":"2007","make":"Toyota","model":"Tundra"}}],"turns":["It has about 150k miles, four doors but the back ones are kind of half doors. It's an old beater. The tire-pressure sensors are broken, so that warning is always on."]}

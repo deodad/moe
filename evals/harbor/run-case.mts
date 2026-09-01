@@ -17,6 +17,7 @@ type EvalCase = {
     category?: string | null;
     attributes?: Record<string, string>;
     carePreferences?: string | null;
+    agentContext?: string | null;
   }>;
   initialEvents?: Array<{
     subjectKey?: string;

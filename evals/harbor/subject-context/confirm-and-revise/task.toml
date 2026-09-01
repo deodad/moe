@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/subject-context-confirm-and-revise"
+version = "0.1.0"
+description = "Rewrite tentative context as the user confirms a preference and answers an open question."
+keywords = ["moe", "memory", "revision", "preferences"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 120.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

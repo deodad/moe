@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/subject-context-mixed-home-baseline"
+version = "0.1.0"
+description = "Classify mixed home baseline claims without collapsing them into one generic record."
+keywords = ["moe", "memory", "context", "semantics"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 120.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512
