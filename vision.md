@@ -9,7 +9,7 @@ It begins with the physical things in your life. You talk to it like ChatGPT. Ov
 ```mermaid
 flowchart TD
     K[Manuals, forums, videos, and manufacturer guidance] --> A[Agent]
-    A --> T[Your Things]
+    A --> T[Your inventory]
     A --> M[Maintenance]
     T --> C[Chat]
     M --> C
@@ -21,9 +21,9 @@ The bet is simple: **responsibility becomes more capable when it has memory. Do 
 
 The mission is broader than possessions. Maintenance is the whole practice of keeping something going: preserving useful continuity, noticing deterioration, repairing damage, and adapting as circumstances change. Moe should help make responsibility less forgetful and more capable without creating work for its own sake.
 
-The product wedge is physical Things. Houses, vehicles, appliances, tools, and machines give the prototype observable identity, history, condition, failure, guidance, and completed work. They let us test whether durable agent memory produces better care without first solving every kind of responsibility.
+The product wedge is physical Subjects. Houses, vehicles, appliances, tools, and machines give the prototype observable identity, history, condition, failure, guidance, and completed work. They let us test whether durable agent memory produces better care without first solving every kind of responsibility.
 
-Other domains may eventually belong in the product, including gardens, practices, relationships, communities, and institutions. That possibility does not make them Things in the current model. A relationship is not an asset, another person's perspective is not canonical state, and sensitive forms of care will need their own product judgment, consent boundaries, and representations.
+Other domains may eventually belong in the product, including gardens, practices, relationships, communities, and institutions. That possibility does not make them Subjects in the current model. A relationship is not an asset, another person's perspective is not canonical state, and sensitive forms of care will need their own product judgment, consent boundaries, and representations.
 
 **Keep the mission broad and the first product concrete.** Moe is not a generic everything assistant; it is an agent for continuity, beginning with the physical world.
 
@@ -34,14 +34,14 @@ There are three primary surfaces:
 | Surface | Purpose |
 | --- | --- |
 | **Chat** | Ask anything and get things done. The primary interface and control plane. |
-| **Things** | See the durable, named things the agent understands and maintains with you. |
+| **Inventory** | See the durable, named things the agent understands and maintains with you. |
 | **Maintenance** | See what deserves attention now, without managing a rigid calendar. |
 
-Chat is primary. Things and Maintenance are structured projections of the same underlying world.
+Chat is primary. Inventory and Maintenance are structured projections of the same underlying world.
 
 ### Chat
 
-The default experience should feel familiar to anyone who has used ChatGPT: conversations in the main pane, a simple input, and lightweight navigation to Things, Maintenance, and recent conversations.
+The default experience should feel familiar to anyone who has used ChatGPT: conversations in the main pane, a simple input, and lightweight navigation to Inventory, Maintenance, and recent conversations.
 
 Natural language should be enough:
 
@@ -63,16 +63,16 @@ flowchart LR
     U[Button or structured UI] --> P
     P --> S[Durable state]
     S --> C[Chat rendering]
-    S --> V[Things and Maintenance views]
+    S --> V[Inventory and Maintenance views]
 ```
 
 Anything possible through structured UI should also be possible through natural conversation.
 
-### Things
+### Inventory
 
-A **Thing** is a durable, named thing the user cares enough about to maintain independently: a house, roof, HVAC system, 4Runner, dishwasher, road bike, or espresso machine.
+A **Subject** is a durable, named thing the user cares enough about to maintain independently: a house, roof, HVAC system, 4Runner, dishwasher, road bike, or espresso machine.
 
-Things should be easy to browse as a flat list. Relationships can improve reasoning without forcing the physical world into a folder tree.
+Subjects should be easy to browse as a flat list. Relationships can improve reasoning without forcing the physical world into a folder tree.
 
 ```mermaid
 flowchart LR
@@ -85,7 +85,7 @@ flowchart LR
     D -- located in --> H
 ```
 
-Not every concept the agent reasons about needs to become a Thing. A muffler is usually context about a car, not another sidebar item. If the user begins restoring it independently, it can be promoted to a Thing.
+Not every concept the agent reasons about needs to become a Subject. A muffler is usually context about a car, not another sidebar item. If the user begins restoring it independently, it can be promoted to a Subject.
 
 **Track what the user would plausibly recognize, revisit, or maintain independently.**
 
@@ -102,7 +102,7 @@ Broad windows are often more truthful than exact dates. The system can reason ab
 
 ## Agent-mediated maintenance
 
-There is no single correct maintenance schedule for a Thing. Source material describes a universe of possible work; the agent decides what is useful for this person and this Thing.
+There is no single correct maintenance schedule for a Subject. Source material describes a universe of possible work; the agent decides what is useful for this person and this Subject.
 
 ```mermaid
 flowchart LR
@@ -113,7 +113,7 @@ flowchart LR
     A --> Q[A small, useful attention queue]
 ```
 
-Care preferences should remain mostly free-form and can differ by Thing:
+Care preferences should remain mostly free-form and can differ by Subject:
 
 > Plans to keep the 4Runner long-term. Wants proactive work that materially improves reliability or condition. Normally uses a shop for scheduled service and does not want separate reminders for minor inspections included in that service.
 
@@ -139,15 +139,15 @@ Good questions appear at the moment they become useful: “Your first service is
 
 ### Identity is revisable
 
-A Thing is the agent's current best grouping of facts about a physical object, not a permanently correct identity record. Its ID provides continuity; its name and attributes are revisable understanding. Events and maintenance are durable facts currently attributed to that Thing and may need to move when later evidence shows that two Things are the same or one Thing was actually two.
+A Subject is the agent's current best grouping of facts about a physical object, not a permanently correct identity record. Its ID provides continuity; its name and attributes are revisable understanding. Events and maintenance are durable facts currently attributed to that Subject and may need to move when later evidence shows that two Subjects are the same or one Subject was actually two.
 
-The agent should defer identity questions while it can make safe progress. It should ask when uncertainty could change the target, guidance, or durable attribution of the current action. Explicit corrections and statements that Things are the same or different are strong evidence, but ambiguous history should not be reassigned merely to make the data look tidy.
+The agent should defer identity questions while it can make safe progress. It should ask when uncertainty could change the target, guidance, or durable attribution of the current action. Explicit corrections and statements that Subjects are the same or different are strong evidence, but ambiguous history should not be reassigned merely to make the data look tidy.
 
 When understanding changes, the agent should repair the user's world without turning the user into a database operator:
 
-- Merge duplicate Things without losing history, maintenance, or care preferences.
-- Split a conflated Thing by moving only facts supported by evidence.
-- Keep replaced or retired Things as history instead of renaming them into their replacements.
+- Merge duplicate Subjects without losing history, maintenance, or care preferences.
+- Split a conflated Subject by moving only facts supported by evidence.
+- Keep replaced or retired Subjects as history instead of renaming them into their replacements.
 - Preserve unresolved distinctions until they become decision-relevant.
 
 **Identity is a revisable interpretation; durable facts should survive revisions to that interpretation.**
@@ -158,7 +158,7 @@ The product needs enough semantics for reliable UI and behavior, without a rigid
 
 ```mermaid
 flowchart TD
-    T[Thing: what is maintained]
+    T[Subject: what is maintained]
     E[Event: what happened]
     M[MaintenanceItem: what deserves attention]
     C[Conversation: retained discussion]
@@ -169,10 +169,10 @@ flowchart TD
     C --> M
 ```
 
-- **Thing** — something worth independently maintaining and surfacing.
+- **Subject** — something worth independently maintaining and surfacing.
 - **Event** — a durable historical fact: purchased, inspected, changed, repaired, or observed.
 - **MaintenanceItem** — a future action or condition worthy of attention, at useful granularity.
-- **Conversation** — a retained agent session that may concern one or many Things.
+- **Conversation** — a retained agent session that may concern one or many Subjects.
 
 Relations, attachments, provenance, and sources can connect these nouns where useful. Categories and attributes should remain loose until repeated product needs justify stronger structure.
 
@@ -182,7 +182,7 @@ Relations, attachments, provenance, and sources can connect these nouns where us
 
 Durable state should be immutable wherever practical. Persist a fact or intention once, then derive the current picture from that canonical record instead of synchronizing copies across the system.
 
-- A **Thing** holds current identity, stable configuration, location, and care preferences. It should not accumulate historical rollups such as last service or copied mileage readings.
+- A **Subject** holds current identity, stable configuration, location, and care preferences. It should not accumulate historical rollups such as last service or copied mileage readings.
 - An **Event** is the canonical account of something that happened or was observed: completed work, measurements, usage, condition, findings, and provenance. Correct an Event explicitly when later evidence shows it is wrong; otherwise leave it unchanged.
 - A **MaintenanceItem** is a future intention. Its source, rationale, and planned scope describe why the work deserves attention, not what ultimately happened.
 
@@ -190,7 +190,7 @@ Completing maintenance should atomically create an Event linked to the planned i
 
 When a plan changes, archive intentions that are no longer useful instead of deleting them or marking them done. Archiving removes an item from attention but does not claim the work happened and does not create an Event.
 
-Current mileage, last service, recent findings, elapsed time since work, and similar summaries should normally be derived from Events when a Thing is inspected. Materialize a derived value only after repeated product behavior proves that recomputing it is insufficient.
+Current mileage, last service, recent findings, elapsed time since work, and similar summaries should normally be derived from Events when a Subject is inspected. Materialize a derived value only after repeated product behavior proves that recomputing it is insufficient.
 
 **Persist facts and intentions; derive current understanding.**
 
@@ -199,7 +199,7 @@ Current mileage, last service, recent findings, elapsed time since work, and sim
 The agent should operate the product through a small set of composable primitives, not hard-coded maintenance workflows.
 
 ```text
-Things:       search, get, create, update
+Subjects:       search, get, create, update
 History:      get history, record event
 Maintenance:  list, create, update
 Knowledge:    search and inspect sources
@@ -214,7 +214,7 @@ Tool calls are both actions and potential UI primitives:
 flowchart TD
     A[Agent tool call and result] --> G[Generic renderer]
     A --> N[Optional native renderer]
-    N --> TC[Thing card]
+    N --> TC[Subject card]
     N --> MC[Maintenance card]
     N --> HL[History list]
 ```
@@ -227,9 +227,9 @@ The agent should be a capable embedded harness, not a bespoke maintenance-specif
 
 ```mermaid
 flowchart TD
-    UI[Web and mobile UI\nChat, Things, Maintenance]
+    UI[Web and mobile UI\nChat, Inventory, Maintenance]
     H[Embedded agent harness\nmodel loop, sessions, streaming, tools]
-    P[Product tools\nThings, Events, MaintenanceItems]
+    P[Product tools\nSubjects, Events, MaintenanceItems]
     K[Knowledge tools\nweb, manuals, documents]
     W[World capabilities\nmedia, reminders, notifications]
     D[Persistent user world\ndata, files, media, sources]
@@ -250,14 +250,14 @@ The initial agent can stay general. Its specialization comes from good instructi
 
 - **Chat is the control plane.** Structured surfaces expose common state; conversation remains the universal interface.
 - **UI is acceleration.** Buttons and cards invoke the same capabilities available through language.
-- **Flat navigation, relational intelligence.** Keep Things easy to browse without denying useful relationships.
+- **Flat navigation, relational intelligence.** Keep Subjects easy to browse without denying useful relationships.
 - **Strong nouns, weak schemas.** Preserve product meaning while allowing the representation to evolve.
 - **Structure outcomes, not understanding.** Keep deterministic product state structured and nuanced context flexible.
 - **Prefer canonical state.** Persist facts and intentions once; derive current readings and summaries from history.
 - **Maintenance is mediated.** Recommend what matters, when it matters, at the granularity the user uses.
-- **Let preferences emerge.** Learn how a person cares for each Thing through interaction.
+- **Let preferences emerge.** Learn how a person cares for each Subject through interaction.
 - **Probe intelligently.** Ask only when an answer materially improves the current decision.
-- **Keep identity revisable.** Defer harmless uncertainty and preserve facts when Things are corrected, merged, or split.
+- **Keep identity revisable.** Defer harmless uncertainty and preserve facts when Subjects are corrected, merged, or split.
 - **Search before creating.** Improve the existing representation instead of duplicating the user's world.
 - **The agent operates the application.** The user should not become a database clerk.
 - **Prefer primitives over workflows.** Keep the agent free to reason and compose.

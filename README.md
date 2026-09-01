@@ -1,6 +1,6 @@
 # Maintenance of Everything
 
-A local learning prototype for a personal agent that helps keep what matters going. The first product wedge is physical Things: Moe remembers their history and mediates their care across Chat, Things, and Maintenance using the same durable application tools.
+A local learning prototype for a personal agent that helps keep what matters going. The first product wedge is physical things, represented internally as Subjects: Moe remembers their history and mediates their care across Chat, Inventory, and Maintenance using the same durable application tools.
 
 ## Requirements
 
@@ -45,7 +45,7 @@ The production shape is one Docker service and one persistent volume. This keeps
 5. Set the health-check path to `/healthz`, generate a Railway HTTPS domain, and open it on your phone. Sign in with username `moe` (or `MOE_ACCESS_USERNAME`) and your shared password.
 6. Enable Railway volume backups after the first successful session.
 
-The access gate is disabled during local development. In production it fails closed with `503` when `MOE_ACCESS_PASSWORD` is missing. It is intentionally only a shared password for this single-user prototype—not an account system. Do not deploy without the `/data` volume: the container filesystem is disposable and your Things, events, plans, and conversations would be lost on redeploy.
+The access gate is disabled during local development. In production it fails closed with `503` when `MOE_ACCESS_PASSWORD` is missing. It is intentionally only a shared password for this single-user prototype—not an account system. Do not deploy without the `/data` volume: the container filesystem is disposable and your Subjects, events, plans, and conversations would be lost on redeploy.
 
 ## Verify
 
@@ -59,7 +59,7 @@ npm run test:e2e
 
 The end-to-end suite starts an isolated local database and uses the installed Google Chrome at desktop and phone viewport sizes.
 
-The model-behavior evals live under `evals/harbor`. `identification` checks deduplication, timely clarification, and Thing boundaries. `maintenance-mediation` measures whether research becomes a small plan at the right granularity. `maintenance-revision` checks whether preference changes reshape an existing plan without fake history. `maintenance-continuation` checks whether completed work and new findings keep an existing plan current without duplication. Each dataset README has run and inspection commands.
+The model-behavior evals live under `evals/harbor`. `identification` checks deduplication, timely clarification, and Subject boundaries. `maintenance-mediation` measures whether research becomes a small plan at the right granularity. `maintenance-revision` checks whether preference changes reshape an existing plan without fake history. `maintenance-continuation` checks whether completed work and new findings keep an existing plan current without duplication. Each dataset README has run and inspection commands.
 
 The main manual flow is:
 
@@ -67,16 +67,16 @@ The main manual flow is:
 2. Ask for a small maintenance plan.
 3. Say that Toyota handles the work and ask to track service intervals instead.
 4. Report that the 5,000-mile service was completed today.
-5. Confirm the Thing, history Event, and next MaintenanceItem in the structured surfaces.
+5. Confirm the Subject, history Event, and next MaintenanceItem in the structured surfaces.
 6. Reload the page and restart the dev server; confirm the conversation and application state remain.
 
 ## Shape
 
 - `app/` contains the Next.js UI and thin HTTP routes.
 - `agent/` contains the small product prompt, twelve application tools, and the canonical `web__run` tool.
-- `lib/database.ts` is the obvious SQLite boundary for Thing, Event, MaintenanceItem, and Conversation.
-- `components/` contains shadcn-style UI primitives and native Thing/Maintenance renderers shared across chat and structured surfaces.
+- `lib/database.ts` is the obvious SQLite boundary for Subject, Event, MaintenanceItem, and Conversation.
+- `components/` contains shadcn-style UI primitives and native Subject/Maintenance renderers shared across chat and structured surfaces.
 
-Nanocodex runs only in the Node route. Each turn includes a compact index of every Thing with its stable ID, category, attributes, and care preferences so the agent can resolve identity directly while the inventory remains small. The dependency is pinned to an immutable, CI-verified preview containing the canonical `web__run` tool. Its caller-owned search boundary runs server-side with `OPENAI_API_KEY`; credentials never enter the browser. The browser receives ordered NDJSON events for assistant text, tool activity, native tool results, and the final durable state. Each completed turn stores Nanocodex's session snapshot with its Conversation so the next request resumes the retained agent history.
+Nanocodex runs only in the Node route. Each turn includes a compact index of every Subject with its stable ID, category, attributes, and care preferences so the agent can resolve identity directly while the inventory remains small. The dependency is pinned to an immutable, CI-verified preview containing the canonical `web__run` tool. Its caller-owned search boundary runs server-side with `OPENAI_API_KEY`; credentials never enter the browser. The browser receives ordered NDJSON events for assistant text, tool activity, native tool results, and the final durable state. Each completed turn stores Nanocodex's session snapshot with its Conversation so the next request resumes the retained agent history.
 
 This remains intentionally single-user. The Docker deployment and shared password gate exist only to make personal mobile use safe enough for learning; accounts, multi-user authentication, notifications, background scheduling, media, and the other exclusions in `prototype.md` remain out of scope.

@@ -3,7 +3,7 @@ schema_version = "1.4"
 [task]
 name = "moe/identification-replacement-not-correction"
 version = "0.1.0"
-description = "Preserve a replaced Thing as history and create its replacement rather than renaming it."
+description = "Preserve a replaced Subject as history and create its replacement rather than renaming it."
 keywords = ["moe", "identification", "replacement", "archive"]
 
 [metadata]

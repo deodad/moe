@@ -5,11 +5,11 @@ result = json.loads(Path("/app/eval-result.json").read_text())
 first_state = result["turns"][0]["state"]
 final_state = result["finalState"]
 
-first_dysons = [thing for thing in first_state["things"] if "dyson" in thing["name"].lower()]
+first_dysons = [subject for subject in first_state["subjects"] if "dyson" in subject["name"].lower()]
 final_dysons = [
-    thing
-    for thing in final_state["things"]
-    if "dyson" in thing["name"].lower() or "v15" in json.dumps(thing["attributes"]).lower()
+    subject
+    for subject in final_state["subjects"]
+    if "dyson" in subject["name"].lower() or "v15" in json.dumps(subject["attributes"]).lower()
 ]
 preference = (final_dysons[0].get("carePreferences") or "").lower() if len(final_dysons) == 1 else ""
 

@@ -3,7 +3,7 @@ schema_version = "1.4"
 [task]
 name = "moe/identification-ambiguous-two-bikes"
 version = "0.1.0"
-description = "Ask which existing Thing is meant before recording ambiguous history."
+description = "Ask which existing Subject is meant before recording ambiguous history."
 keywords = ["moe", "identification", "clarification"]
 
 [metadata]

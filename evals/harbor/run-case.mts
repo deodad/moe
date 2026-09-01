@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { AgentEvent, TurnUsage } from "nanocodex";
 import { Agent, Transport } from "nanocodex/node";
-import { agentInstructionsWithThings } from "@/agent/context";
+import { agentInstructionsWithSubjects } from "@/agent/context";
 import { createApplicationTools } from "@/agent/tools";
 import { createWebSearchTool } from "@/agent/web-search";
 import { MoeDatabase } from "@/lib/database";
@@ -11,7 +11,7 @@ import type { ToolActivity } from "@/lib/types";
 
 type EvalCase = {
   case: string;
-  initialThings?: Array<{
+  initialSubjects?: Array<{
     key?: string;
     name: string;
     category?: string | null;
@@ -19,13 +19,13 @@ type EvalCase = {
     carePreferences?: string | null;
   }>;
   initialEvents?: Array<{
-    thingKey?: string;
+    subjectKey?: string;
     summary: string;
     occurredAt?: string;
     data?: Record<string, unknown>;
   }>;
   initialMaintenance?: Array<{
-    thingKey?: string;
+    subjectKey?: string;
     title: string;
     timing?: "overdue" | "this_week" | "this_month" | "later";
     rationale?: string | null;
@@ -101,16 +101,16 @@ if (!spec.case || !Array.isArray(spec.turns) || spec.turns.length === 0) {
 const tempDirectory = mkdtempSync(join(tmpdir(), "moe-eval-"));
 process.env.MOE_DATABASE_PATH = join(tempDirectory, "moe.db");
 const db = new MoeDatabase(process.env.MOE_DATABASE_PATH, false);
-const thingIds = new Map<string, string>();
-for (const { key, ...thing } of spec.initialThings ?? []) {
-  const created = db.createThing(thing);
-  if (key) thingIds.set(key, created.id);
+const subjectIds = new Map<string, string>();
+for (const { key, ...subject } of spec.initialSubjects ?? []) {
+  const created = db.createSubject(subject);
+  if (key) subjectIds.set(key, created.id);
 }
-for (const { thingKey, ...event } of spec.initialEvents ?? []) {
-  db.recordEvent({ ...event, thingId: thingKey ? thingIds.get(thingKey) : undefined });
+for (const { subjectKey, ...event } of spec.initialEvents ?? []) {
+  db.recordEvent({ ...event, subjectId: subjectKey ? subjectIds.get(subjectKey) : undefined });
 }
-for (const { thingKey, ...maintenance } of spec.initialMaintenance ?? []) {
-  db.createMaintenance({ ...maintenance, thingId: thingKey ? thingIds.get(thingKey) : undefined });
+for (const { subjectKey, ...maintenance } of spec.initialMaintenance ?? []) {
+  db.createMaintenance({ ...maintenance, subjectId: subjectKey ? subjectIds.get(subjectKey) : undefined });
 }
 const initialState = db.getState();
 const webTool = createWebSearchTool({ apiKey, apiBaseUrl: process.env.OPENAI_API_BASE_URL });
@@ -119,7 +119,7 @@ const agent = await Agent.create({
   model,
   thinking: "low",
   reasoningMode: "standard",
-  instructions: agentInstructionsWithThings(db.listThings()),
+  instructions: agentInstructionsWithSubjects(db.listSubjects()),
   tools: { ...createApplicationTools(db), [webTool.name]: webTool },
   toolMode: "direct",
   workspace: process.cwd(),

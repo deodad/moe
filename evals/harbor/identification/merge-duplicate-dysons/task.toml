@@ -3,7 +3,7 @@ schema_version = "1.4"
 [task]
 name = "moe/identification-merge-duplicate-dysons"
 version = "0.1.0"
-description = "Merge duplicate Things while preserving agent-selected identity and all attributed state."
+description = "Merge duplicate Subjects while preserving agent-selected identity and all attributed state."
 keywords = ["moe", "identification", "merge", "reconciliation"]
 
 [metadata]

@@ -3,8 +3,8 @@ schema_version = "1.4"
 [task]
 name = "moe/identification-component-history"
 version = "0.1.0"
-description = "Record component work against its maintained parent instead of creating a component Thing."
-keywords = ["moe", "identification", "thing-boundary"]
+description = "Record component work against its maintained parent instead of creating a component Subject."
+keywords = ["moe", "identification", "subject-boundary"]
 
 [metadata]
 category = "product-agent"

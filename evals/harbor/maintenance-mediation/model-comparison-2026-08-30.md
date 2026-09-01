@@ -28,6 +28,6 @@ Harbor did not report cost. Terra used substantially more search context and too
 
 Keep Luna as the default conversational model. Use Terra for the bounded phase that researches a formal maintenance schedule and turns it into an initial or refreshed plan. Do not route ordinary questions, completion recording, or simple plan mutations to Terra.
 
-The simplest prototype boundary is a deliberate maintenance-research operation with a Thing, its Event history, and care preferences as input. It should return source evidence plus proposed maintenance changes for the application to persist. This preserves one durable state model and avoids making model choice part of every chat turn.
+The simplest prototype boundary is a deliberate maintenance-research operation with a Subject, its Event history, and care preferences as input. It should return source evidence plus proposed maintenance changes for the application to persist. This preserves one durable state model and avoids making model choice part of every chat turn.
 
 Before hardening that routing, repeat these two cases enough times to measure variance. A general improvement to primary-document link extraction may still reduce the model gap, but this run does not justify a Toyota-specific resolver or another prompt rule.

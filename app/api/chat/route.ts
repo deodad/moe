@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { AgentEvent, SessionSnapshot } from "nanocodex";
-import { agentInstructionsWithThings } from "@/agent/context";
+import { agentInstructionsWithSubjects } from "@/agent/context";
 import { createApplicationTools } from "@/agent/tools";
 import { createWebSearchTool } from "@/agent/web-search";
 import { getDatabase } from "@/lib/database";
@@ -149,7 +149,7 @@ export async function POST(request: Request) {
           model,
           thinking: "low",
           reasoningMode: "standard",
-          instructions: agentInstructionsWithThings(db.listThings()),
+          instructions: agentInstructionsWithSubjects(db.listSubjects()),
           tools: {
             ...createApplicationTools(db),
             [webTool.name]: webTool,

@@ -1,9 +1,9 @@
 schema_version = "1.4"
 
 [task]
-name = "moe/identification-explicit-separate-second-thing"
+name = "moe/identification-explicit-separate-second-subject"
 version = "0.1.0"
-description = "Create another Thing when the user explicitly distinguishes an otherwise identical object."
+description = "Create another Subject when the user explicitly distinguishes an otherwise identical object."
 keywords = ["moe", "identification", "creation", "plurality"]
 
 [metadata]

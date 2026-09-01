@@ -18,17 +18,17 @@ afterEach(() => {
 });
 
 describe("persistent product state", () => {
-  it("preserves Things, care preferences, maintenance, history, and conversations after restart", () => {
+  it("preserves Subjects, care preferences, maintenance, history, and conversations after restart", () => {
     const path = databasePath();
     const first = new MoeDatabase(path, false);
-    const thing = first.createThing({
+    const subject = first.createSubject({
       name: "4Runner",
       category: "Vehicle",
       attributes: { year: "2026" },
       carePreferences: "Keep it forever.",
     });
     const maintenance = first.createMaintenance({
-      thingId: thing.id,
+      subjectId: subject.id,
       title: "5,000-mile service",
       timing: "this_month",
     });
@@ -41,9 +41,9 @@ describe("persistent product state", () => {
     first.close();
 
     const resumed = new MoeDatabase(path, false);
-    expect(resumed.getThing(thing.id)?.carePreferences).toBe("Keep it forever.");
+    expect(resumed.getSubject(subject.id)?.carePreferences).toBe("Keep it forever.");
     expect(resumed.getMaintenance(maintenance.id)?.status).toBe("done");
-    expect(resumed.getHistory(thing.id).map((event) => event.summary)).toContain("5,000-mile service completed");
+    expect(resumed.getHistory(subject.id).map((event) => event.summary)).toContain("5,000-mile service completed");
     expect(resumed.getConversation(conversation.id)?.messages[0]?.text).toBe("I want to keep it forever.");
     expect(resumed.getConversationSnapshot(conversation.id)).toEqual({ version: 1, history: [] });
     resumed.close();
@@ -60,19 +60,19 @@ describe("persistent product state", () => {
       signal: new AbortController().signal,
     };
 
-    expect(await tools.search_things.handler({ query: "4Runner" }, context)).toEqual([]);
-    const thing = await tools.create_thing.handler({
+    expect(await tools.search_subjects.handler({ query: "4Runner" }, context)).toEqual([]);
+    const subject = await tools.create_subject.handler({
       name: "4Runner",
       category: "Vehicle",
       attributes: { year: "2026", make: "Toyota" },
       care_preferences: "Keep it forever. Proactive about worthwhile reliability maintenance.",
     }, context) as { id: string };
-    await tools.update_thing.handler({
-      id: thing.id,
+    await tools.update_subject.handler({
+      id: subject.id,
       care_preferences: "Keep it forever. Toyota handles scheduled service; track service intervals.",
     }, context);
     const item = await tools.create_maintenance.handler({
-      thing_id: thing.id,
+      subject_id: subject.id,
       title: "5,000-mile service",
       timing: "this_month",
       rationale: "First Toyota service interval.",
@@ -85,33 +85,33 @@ describe("persistent product state", () => {
       completion_details: { odometer: "5,120 miles", provider: "Toyota" },
     }, context);
     await tools.create_maintenance.handler({
-      thing_id: thing.id,
+      subject_id: subject.id,
       title: "10,000-mile service",
       timing: "later",
       rationale: "Next shop service interval.",
     }, context);
 
-    expect(db.getThing(thing.id)?.carePreferences).toContain("Toyota handles scheduled service");
+    expect(db.getSubject(subject.id)?.carePreferences).toContain("Toyota handles scheduled service");
     expect(db.getMaintenance(item.id)?.status).toBe("done");
-    expect(db.getHistory(thing.id)[0]?.summary).toBe("5,000-mile service completed");
-    expect(db.getHistory(thing.id)[0]?.data).toMatchObject({
+    expect(db.getHistory(subject.id)[0]?.summary).toBe("5,000-mile service completed");
+    expect(db.getHistory(subject.id)[0]?.data).toMatchObject({
       maintenanceItemId: item.id,
       source: "Owner report",
       details: { odometer: "5,120 miles", provider: "Toyota" },
     });
-    expect(db.listMaintenance({ thingId: thing.id }).map((entry) => entry.title)).toEqual(["10,000-mile service"]);
+    expect(db.listMaintenance({ subjectId: subject.id }).map((entry) => entry.title)).toEqual(["10,000-mile service"]);
     db.close();
   });
 
   it("uses the same completion behavior for structured UI mutations", () => {
     const db = new MoeDatabase(":memory:", false);
-    const thing = db.createThing({ name: "Espresso machine" });
-    const item = db.createMaintenance({ thingId: thing.id, title: "Backflush", timing: "this_week" });
+    const subject = db.createSubject({ name: "Espresso machine" });
+    const item = db.createMaintenance({ subjectId: subject.id, title: "Backflush", timing: "this_week" });
 
     db.updateMaintenance(item.id, { status: "done" });
 
     expect(db.getMaintenance(item.id)?.status).toBe("done");
-    expect(db.getHistory(thing.id)[0]?.summary).toBe("Backflush completed");
+    expect(db.getHistory(subject.id)[0]?.summary).toBe("Backflush completed");
     db.close();
   });
 });

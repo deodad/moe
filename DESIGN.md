@@ -54,7 +54,7 @@ parts that apply here:
    once. Padding exists to separate, not to give things room to "breathe"
    for its own sake.
 6. **State is a plain-language record, not a command.** What the agent did
-   is shown as a labeled field/value/status row — e.g. `Thing logged —
+   is shown as a labeled field/value/status row — e.g. `Subject logged —
    4Runner — OK` — reusing the same row shape as the maintenance ledger.
    Never rendered as a shell command; this product is not for developers.
 
@@ -99,9 +99,9 @@ Concrete, implementable rules derived from the principles above.
   bar + tinted background, not a solid fill block.
 - **Badges/status → bordered tags**, not soft pill fills: small mono
   text, 1px border in the semantic color, tinted (not solid) background.
-- **Maintenance queue → a real table.** Columns: status tag, item, thing,
+- **Maintenance queue → a real table.** Columns: status tag, item, subject,
   actions. Not a card grid.
-- **Thing detail → a labeled spec sheet.** `label : value` rows with a
+- **Subject detail → a labeled spec sheet.** `label : value` rows with a
   hairline rule between them, not prose paragraphs in a card.
 - **Tool activity in chat → an activity record**, reusing the maintenance
   ledger's row shape: `FIELD` (mono label) · value (plain language) ·
@@ -122,7 +122,7 @@ Concrete, implementable rules derived from the principles above.
   crafts/notebook, not engineering.
 - Grid-paper background textures — decorative, fights legibility, not
   worth the "cute" tradeoff.
-- Shell-command styling for tool activity (`$ create_thing --name ...`) —
+- Shell-command styling for tool activity (`$ create_subject --name ...`) —
   correct principle (expose state), wrong register (developer tool, not a
   consumer product).
 - Soft rounded cards + drop shadows — the default shadcn look; reads as

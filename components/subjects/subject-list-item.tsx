@@ -1,7 +1,7 @@
-import type { Thing } from "@/lib/types";
+import type { Subject } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function ThingListItem({ thing, selected, onClick }: { thing: Thing; selected?: boolean; onClick: () => void }) {
+export function SubjectListItem({ subject, selected, onClick }: { subject: Subject; selected?: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -10,8 +10,8 @@ export function ThingListItem({ thing, selected, onClick }: { thing: Thing; sele
         selected ? "border-l-2 border-l-primary bg-accent pl-[calc(0.75rem-2px)] font-medium text-accent-foreground" : "hover:bg-muted/60",
       )}
     >
-      <span className="truncate">{thing.name}</span>
-      <span className="truncate font-mono text-[0.68rem] tracking-wide text-muted-foreground uppercase">{thing.category ?? "Item"}</span>
+      <span className="truncate">{subject.name}</span>
+      <span className="truncate font-mono text-[0.68rem] tracking-wide text-muted-foreground uppercase">{subject.category ?? "Item"}</span>
     </button>
   );
 }

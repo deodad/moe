@@ -6,13 +6,13 @@ turn = result["turns"][0]
 initial = result["initialState"]
 state = result["finalState"]
 tools = turn["tools"]
-thing = state["things"][0]
-thing_id = thing["id"]
-items = [item for item in state["maintenance"] if item["thingId"] == thing_id]
+subject = state["subjects"][0]
+subject_id = subject["id"]
+items = [item for item in state["maintenance"] if item["subjectId"] == subject_id]
 initial_ids = {item["id"] for item in initial["maintenance"]}
 final_ids = {item["id"] for item in items}
 
-preference = (thing.get("carePreferences") or "").lower()
+preference = (subject.get("carePreferences") or "").lower()
 preference_updated = (
     any(term in preference for term in ["toyota", "shop", "dealer"])
     and any(term in preference for term in ["visit", "service interval", "group", "composite"])
@@ -48,7 +48,7 @@ no_fake_completion = (
         for tool in tools
     )
 )
-thing_not_duplicated = len(state["things"]) == 1
+subject_not_duplicated = len(state["subjects"]) == 1
 
 metrics = {
     "care_preference_updated": float(preference_updated),
@@ -57,7 +57,7 @@ metrics = {
     "obsolete_items_retired": float(obsolete_items_retired),
     "no_fake_completion_history": float(no_fake_completion),
     "source_context_retained": float(source_retained),
-    "thing_not_duplicated": float(thing_not_duplicated),
+    "subject_not_duplicated": float(subject_not_duplicated),
 }
 Path("/logs/verifier/reward.json").write_text(json.dumps(metrics))
 Path("/logs/verifier/details.json").write_text(json.dumps({
@@ -65,6 +65,6 @@ Path("/logs/verifier/details.json").write_text(json.dumps({
     "output": turn["output"],
     "tools": tools,
     "maintenance": items,
-    "things": state["things"],
+    "subjects": state["subjects"],
     "events": state["events"],
 }, indent=2))

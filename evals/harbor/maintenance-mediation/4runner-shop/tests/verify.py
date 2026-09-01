@@ -41,7 +41,7 @@ mirror_schedule_opened = any(
     and any(domain in serialized_call(tool) for domain in ["manuals.plus", "device.report"])
     for tool in web_calls
 )
-all_attached = bool(items) and all(item["thingId"] == initial["things"][0]["id"] for item in items)
+all_attached = bool(items) and all(item["subjectId"] == initial["subjects"][0]["id"] for item in items)
 small_plan = 1 <= len(items) <= 4
 
 serialized = json.dumps(items).lower()
@@ -51,7 +51,7 @@ underlying_work = sum(term in serialized for term in ["oil", "tire", "brake", "f
 composite_granularity = service_title and underlying_work >= 2
 source_retained = any(item.get("data", {}).get("source") for item in items)
 has_timing_basis = any(term in serialized for term in ["mile", "month", "year", "interval"])
-no_unrelated_mutation = state["events"] == initial["events"] and state["things"] == initial["things"]
+no_unrelated_mutation = state["events"] == initial["events"] and state["subjects"] == initial["subjects"]
 withheld_without_primary = manufacturer_schedule_opened or not items
 
 metrics = {
@@ -62,7 +62,7 @@ metrics = {
     "withheld_without_primary": float(withheld_without_primary),
     "small_plan": float(small_plan),
     "composite_shop_granularity": float(composite_granularity),
-    "attached_to_supplied_thing": float(all_attached),
+    "attached_to_supplied_subject": float(all_attached),
     "source_retained": float(source_retained),
     "timing_basis_retained": float(has_timing_basis),
     "no_unrelated_mutation": float(no_unrelated_mutation),

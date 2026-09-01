@@ -9,7 +9,7 @@ import type {
   HistoryEvent,
   MaintenanceItem,
   MaintenanceStatus,
-  Thing,
+  Subject,
   Timing,
 } from "@/lib/types";
 
@@ -48,20 +48,33 @@ export class MoeDatabase {
   }
 
   private migrate() {
+    const existingTables = new Set(
+      (this.sqlite.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as Array<{ name: string }>).map(
+        (table) => table.name,
+      ),
+    );
+    if (existingTables.has("things") && !existingTables.has("subjects")) {
+      this.sqlite.exec(`
+        ALTER TABLE things RENAME TO subjects;
+        ALTER TABLE events RENAME COLUMN thing_id TO subject_id;
+        ALTER TABLE maintenance_items RENAME COLUMN thing_id TO subject_id;
+      `);
+    }
+
     this.sqlite.exec(`
-      CREATE TABLE IF NOT EXISTS things (
+      CREATE TABLE IF NOT EXISTS subjects (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         category TEXT,
         attributes_json TEXT NOT NULL DEFAULT '{}',
         care_preferences TEXT,
         archived_at TEXT,
-        merged_into_id TEXT REFERENCES things(id) ON DELETE SET NULL,
+        merged_into_id TEXT REFERENCES subjects(id) ON DELETE SET NULL,
         created_at TEXT NOT NULL
       );
       CREATE TABLE IF NOT EXISTS events (
         id TEXT PRIMARY KEY,
-        thing_id TEXT REFERENCES things(id) ON DELETE SET NULL,
+        subject_id TEXT REFERENCES subjects(id) ON DELETE SET NULL,
         summary TEXT NOT NULL,
         occurred_at TEXT NOT NULL,
         data_json TEXT NOT NULL DEFAULT '{}',
@@ -69,7 +82,7 @@ export class MoeDatabase {
       );
       CREATE TABLE IF NOT EXISTS maintenance_items (
         id TEXT PRIMARY KEY,
-        thing_id TEXT REFERENCES things(id) ON DELETE SET NULL,
+        subject_id TEXT REFERENCES subjects(id) ON DELETE SET NULL,
         title TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'active',
         timing TEXT NOT NULL DEFAULT 'later',
@@ -88,97 +101,97 @@ export class MoeDatabase {
         updated_at TEXT NOT NULL
       );
     `);
-    const thingColumns = new Set(
-      (this.sqlite.prepare("PRAGMA table_info(things)").all() as Array<{ name: string }>).map((column) => column.name),
+    const subjectColumns = new Set(
+      (this.sqlite.prepare("PRAGMA table_info(subjects)").all() as Array<{ name: string }>).map((column) => column.name),
     );
-    if (!thingColumns.has("archived_at")) this.sqlite.exec("ALTER TABLE things ADD COLUMN archived_at TEXT");
-    if (!thingColumns.has("merged_into_id")) {
-      this.sqlite.exec("ALTER TABLE things ADD COLUMN merged_into_id TEXT REFERENCES things(id) ON DELETE SET NULL");
+    if (!subjectColumns.has("archived_at")) this.sqlite.exec("ALTER TABLE subjects ADD COLUMN archived_at TEXT");
+    if (!subjectColumns.has("merged_into_id")) {
+      this.sqlite.exec("ALTER TABLE subjects ADD COLUMN merged_into_id TEXT REFERENCES subjects(id) ON DELETE SET NULL");
     }
   }
 
   private seed() {
-    const row = this.sqlite.prepare("SELECT COUNT(*) AS count FROM things").get() as { count: number };
+    const row = this.sqlite.prepare("SELECT COUNT(*) AS count FROM subjects").get() as { count: number };
     if (row.count > 0) return;
 
-    const house = this.createThing({ name: "House", category: "Home", attributes: { built: "1987" } });
-    const runner = this.createThing({
+    const house = this.createSubject({ name: "House", category: "Home", attributes: { built: "1987" } });
+    const runner = this.createSubject({
       name: "4Runner",
       category: "Vehicle",
       attributes: { year: "2019", make: "Toyota", model: "4Runner" },
       carePreferences: "Keep long term. Proactive about worthwhile reliability maintenance. Usually serviced at a shop.",
     });
-    this.createThing({ name: "HVAC", category: "Home system", attributes: { serves: "House" } });
-    this.createThing({ name: "Bosch dishwasher", category: "Appliance", attributes: { location: "Kitchen" } });
-    this.createThing({ name: "Espresso machine", category: "Appliance", attributes: { brand: "Rocket" } });
+    this.createSubject({ name: "HVAC", category: "Home system", attributes: { serves: "House" } });
+    this.createSubject({ name: "Bosch dishwasher", category: "Appliance", attributes: { location: "Kitchen" } });
+    this.createSubject({ name: "Espresso machine", category: "Appliance", attributes: { brand: "Rocket" } });
 
-    this.recordEvent({ thingId: runner.id, summary: "Oil changed", occurredAt: "2026-06-03T12:00:00.000Z" });
+    this.recordEvent({ subjectId: runner.id, summary: "Oil changed", occurredAt: "2026-06-03T12:00:00.000Z" });
     this.recordEvent({
-      thingId: runner.id,
+      subjectId: runner.id,
       summary: "Odometer recorded at 64,180 miles",
       occurredAt: "2026-08-29T12:00:00.000Z",
       data: { details: { odometer: "64,180 miles" } },
     });
-    this.recordEvent({ thingId: house.id, summary: "Replaced HVAC filter", occurredAt: "2026-07-14T12:00:00.000Z" });
+    this.recordEvent({ subjectId: house.id, summary: "Replaced HVAC filter", occurredAt: "2026-07-14T12:00:00.000Z" });
     this.createMaintenance({
-      thingId: runner.id,
+      subjectId: runner.id,
       title: "5,000-mile service",
       timing: "this_month",
       rationale: "The odometer is approaching the next 5,000-mile service interval.",
     });
     this.createMaintenance({
-      thingId: house.id,
+      subjectId: house.id,
       title: "Clean dryer vent",
       timing: "this_week",
       rationale: "Annual cleaning reduces drying time and lint buildup.",
     });
   }
 
-  listThings(options: { includeArchived?: boolean } = {}): Thing[] {
+  listSubjects(options: { includeArchived?: boolean } = {}): Subject[] {
     const where = options.includeArchived ? "" : "WHERE archived_at IS NULL";
-    const rows = this.sqlite.prepare(`SELECT * FROM things ${where} ORDER BY created_at, name`).all();
-    return rows.map((row) => this.mapThing(row as Record<string, unknown>));
+    const rows = this.sqlite.prepare(`SELECT * FROM subjects ${where} ORDER BY created_at, name`).all();
+    return rows.map((row) => this.mapSubject(row as Record<string, unknown>));
   }
 
-  searchThings(query: string, options: { includeArchived?: boolean } = {}): Thing[] {
+  searchSubjects(query: string, options: { includeArchived?: boolean } = {}): Subject[] {
     const term = `%${query.trim()}%`;
     const archived = options.includeArchived ? "" : "archived_at IS NULL AND";
     const rows = this.sqlite
-      .prepare(`SELECT * FROM things WHERE ${archived} (name LIKE ? OR category LIKE ? OR attributes_json LIKE ?) ORDER BY name`)
+      .prepare(`SELECT * FROM subjects WHERE ${archived} (name LIKE ? OR category LIKE ? OR attributes_json LIKE ?) ORDER BY name`)
       .all(term, term, term);
-    return rows.map((row) => this.mapThing(row as Record<string, unknown>));
+    return rows.map((row) => this.mapSubject(row as Record<string, unknown>));
   }
 
-  getThing(id: string): Thing | null {
-    const row = this.sqlite.prepare("SELECT * FROM things WHERE id = ?").get(id);
-    return row ? this.mapThing(row as Record<string, unknown>) : null;
+  getSubject(id: string): Subject | null {
+    const row = this.sqlite.prepare("SELECT * FROM subjects WHERE id = ?").get(id);
+    return row ? this.mapSubject(row as Record<string, unknown>) : null;
   }
 
-  createThing(input: {
+  createSubject(input: {
     name: string;
     category?: string | null;
     attributes?: Record<string, string>;
     carePreferences?: string | null;
-  }): Thing {
+  }): Subject {
     const id = randomUUID();
     const createdAt = now();
     this.sqlite
-      .prepare("INSERT INTO things (id, name, category, attributes_json, care_preferences, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+      .prepare("INSERT INTO subjects (id, name, category, attributes_json, care_preferences, created_at) VALUES (?, ?, ?, ?, ?, ?)")
       .run(id, input.name.trim(), input.category ?? null, stringify(input.attributes ?? {}), input.carePreferences ?? null, createdAt);
-    return this.getThing(id)!;
+    return this.getSubject(id)!;
   }
 
-  updateThing(id: string, input: {
+  updateSubject(id: string, input: {
     name?: string;
     category?: string | null;
     attributes?: Record<string, string>;
     carePreferences?: string | null;
-  }): Thing | null {
-    const current = this.getThing(id);
+  }): Subject | null {
+    const current = this.getSubject(id);
     if (!current) return null;
     const attributes = input.attributes ? { ...current.attributes, ...input.attributes } : current.attributes;
     this.sqlite
-      .prepare("UPDATE things SET name = ?, category = ?, attributes_json = ?, care_preferences = ? WHERE id = ?")
+      .prepare("UPDATE subjects SET name = ?, category = ?, attributes_json = ?, care_preferences = ? WHERE id = ?")
       .run(
         input.name?.trim() ?? current.name,
         input.category === undefined ? current.category : input.category,
@@ -186,19 +199,19 @@ export class MoeDatabase {
         input.carePreferences === undefined ? current.carePreferences : input.carePreferences,
         id,
       );
-    return this.getThing(id);
+    return this.getSubject(id);
   }
 
-  archiveThing(id: string): Thing | null {
-    const current = this.getThing(id);
+  archiveSubject(id: string): Subject | null {
+    const current = this.getSubject(id);
     if (!current) return null;
     if (!current.archivedAt) {
-      this.sqlite.prepare("UPDATE things SET archived_at = ? WHERE id = ?").run(now(), id);
+      this.sqlite.prepare("UPDATE subjects SET archived_at = ? WHERE id = ?").run(now(), id);
     }
-    return this.getThing(id);
+    return this.getSubject(id);
   }
 
-  mergeThings(input: {
+  mergeSubjects(input: {
     keepId: string;
     absorbId: string;
     survivor: {
@@ -208,24 +221,24 @@ export class MoeDatabase {
       carePreferences: string | null;
     };
   }) {
-    if (input.keepId === input.absorbId) throw new Error("Cannot merge a Thing into itself");
-    const keep = this.getThing(input.keepId);
-    const absorb = this.getThing(input.absorbId);
-    if (!keep || !absorb) throw new Error("Thing not found");
-    if (keep.archivedAt || absorb.archivedAt) throw new Error("Cannot merge an archived Thing");
+    if (input.keepId === input.absorbId) throw new Error("Cannot merge a Subject into itself");
+    const keep = this.getSubject(input.keepId);
+    const absorb = this.getSubject(input.absorbId);
+    if (!keep || !absorb) throw new Error("Subject not found");
+    if (keep.archivedAt || absorb.archivedAt) throw new Error("Cannot merge an archived Subject");
 
     const eventsMoved = Number(
-      (this.sqlite.prepare("SELECT COUNT(*) AS count FROM events WHERE thing_id = ?").get(input.absorbId) as { count: number }).count,
+      (this.sqlite.prepare("SELECT COUNT(*) AS count FROM events WHERE subject_id = ?").get(input.absorbId) as { count: number }).count,
     );
     const maintenanceMoved = Number(
-      (this.sqlite.prepare("SELECT COUNT(*) AS count FROM maintenance_items WHERE thing_id = ?").get(input.absorbId) as { count: number }).count,
+      (this.sqlite.prepare("SELECT COUNT(*) AS count FROM maintenance_items WHERE subject_id = ?").get(input.absorbId) as { count: number }).count,
     );
     const mergedAt = now();
 
     this.sqlite.exec("BEGIN");
     try {
       this.sqlite.prepare(`
-        UPDATE things SET name = ?, category = ?, attributes_json = ?, care_preferences = ? WHERE id = ?
+        UPDATE subjects SET name = ?, category = ?, attributes_json = ?, care_preferences = ? WHERE id = ?
       `).run(
         input.survivor.name.trim(),
         input.survivor.category,
@@ -233,10 +246,10 @@ export class MoeDatabase {
         input.survivor.carePreferences,
         input.keepId,
       );
-      this.sqlite.prepare("UPDATE events SET thing_id = ? WHERE thing_id = ?").run(input.keepId, input.absorbId);
-      this.sqlite.prepare("UPDATE maintenance_items SET thing_id = ?, updated_at = ? WHERE thing_id = ?")
+      this.sqlite.prepare("UPDATE events SET subject_id = ? WHERE subject_id = ?").run(input.keepId, input.absorbId);
+      this.sqlite.prepare("UPDATE maintenance_items SET subject_id = ?, updated_at = ? WHERE subject_id = ?")
         .run(input.keepId, mergedAt, input.absorbId);
-      this.sqlite.prepare("UPDATE things SET archived_at = ?, merged_into_id = ? WHERE id = ?")
+      this.sqlite.prepare("UPDATE subjects SET archived_at = ?, merged_into_id = ? WHERE id = ?")
         .run(mergedAt, input.keepId, input.absorbId);
       this.sqlite.exec("COMMIT");
     } catch (error) {
@@ -245,26 +258,26 @@ export class MoeDatabase {
     }
 
     return {
-      thing: this.getThing(input.keepId)!,
-      absorbedThing: this.getThing(input.absorbId)!,
+      subject: this.getSubject(input.keepId)!,
+      absorbedSubject: this.getSubject(input.absorbId)!,
       eventsMoved,
       maintenanceMoved,
     };
   }
 
-  getHistory(thingId?: string | null): HistoryEvent[] {
-    const rows = thingId
-      ? this.sqlite.prepare("SELECT * FROM events WHERE thing_id = ? ORDER BY occurred_at DESC").all(thingId)
+  getHistory(subjectId?: string | null): HistoryEvent[] {
+    const rows = subjectId
+      ? this.sqlite.prepare("SELECT * FROM events WHERE subject_id = ? ORDER BY occurred_at DESC").all(subjectId)
       : this.sqlite.prepare("SELECT * FROM events ORDER BY occurred_at DESC").all();
     return rows.map((row) => this.mapEvent(row as Record<string, unknown>));
   }
 
-  recordEvent(input: { thingId?: string | null; summary: string; occurredAt?: string; data?: JsonObject }): HistoryEvent {
+  recordEvent(input: { subjectId?: string | null; summary: string; occurredAt?: string; data?: JsonObject }): HistoryEvent {
     const id = randomUUID();
     const createdAt = now();
     this.sqlite
-      .prepare("INSERT INTO events (id, thing_id, summary, occurred_at, data_json, created_at) VALUES (?, ?, ?, ?, ?, ?)")
-      .run(id, input.thingId ?? null, input.summary.trim(), input.occurredAt ?? createdAt, stringify(input.data ?? {}), createdAt);
+      .prepare("INSERT INTO events (id, subject_id, summary, occurred_at, data_json, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(id, input.subjectId ?? null, input.summary.trim(), input.occurredAt ?? createdAt, stringify(input.data ?? {}), createdAt);
     const row = this.sqlite.prepare("SELECT * FROM events WHERE id = ?").get(id)!;
     return this.mapEvent(row as Record<string, unknown>);
   }
@@ -275,7 +288,7 @@ export class MoeDatabase {
   }
 
   updateEvent(id: string, input: {
-    thingId?: string | null;
+    subjectId?: string | null;
     summary?: string;
     occurredAt?: string;
     data?: JsonObject;
@@ -283,9 +296,9 @@ export class MoeDatabase {
     const current = this.getEvent(id);
     if (!current) return null;
     this.sqlite.prepare(`
-      UPDATE events SET thing_id = ?, summary = ?, occurred_at = ?, data_json = ? WHERE id = ?
+      UPDATE events SET subject_id = ?, summary = ?, occurred_at = ?, data_json = ? WHERE id = ?
     `).run(
-      input.thingId === undefined ? current.thingId : input.thingId,
+      input.subjectId === undefined ? current.subjectId : input.subjectId,
       input.summary?.trim() ?? current.summary,
       input.occurredAt ?? current.occurredAt,
       stringify(input.data ? { ...current.data, ...input.data } : current.data),
@@ -294,18 +307,18 @@ export class MoeDatabase {
     return this.getEvent(id);
   }
 
-  listMaintenance(options: { includeDone?: boolean; thingId?: string } = {}): MaintenanceItem[] {
+  listMaintenance(options: { includeDone?: boolean; subjectId?: string } = {}): MaintenanceItem[] {
     const clauses: string[] = [];
     const values: string[] = [];
     if (!options.includeDone) clauses.push("m.status = 'active'");
-    if (options.thingId) {
-      clauses.push("m.thing_id = ?");
-      values.push(options.thingId);
+    if (options.subjectId) {
+      clauses.push("m.subject_id = ?");
+      values.push(options.subjectId);
     }
     const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
     const rows = this.sqlite.prepare(`
-      SELECT m.*, t.name AS thing_name FROM maintenance_items m
-      LEFT JOIN things t ON t.id = m.thing_id
+      SELECT m.*, t.name AS subject_name FROM maintenance_items m
+      LEFT JOIN subjects t ON t.id = m.subject_id
       ${where}
       ORDER BY CASE timing WHEN 'overdue' THEN 0 WHEN 'this_week' THEN 1 WHEN 'this_month' THEN 2 ELSE 3 END,
                m.created_at
@@ -315,14 +328,14 @@ export class MoeDatabase {
 
   getMaintenance(id: string): MaintenanceItem | null {
     const row = this.sqlite.prepare(`
-      SELECT m.*, t.name AS thing_name FROM maintenance_items m
-      LEFT JOIN things t ON t.id = m.thing_id WHERE m.id = ?
+      SELECT m.*, t.name AS subject_name FROM maintenance_items m
+      LEFT JOIN subjects t ON t.id = m.subject_id WHERE m.id = ?
     `).get(id);
     return row ? this.mapMaintenance(row as Record<string, unknown>) : null;
   }
 
   createMaintenance(input: {
-    thingId?: string | null;
+    subjectId?: string | null;
     title: string;
     timing?: Timing;
     rationale?: string | null;
@@ -332,14 +345,14 @@ export class MoeDatabase {
     const createdAt = now();
     this.sqlite.prepare(`
       INSERT INTO maintenance_items
-        (id, thing_id, title, status, timing, rationale, data_json, completed_at, created_at, updated_at)
+        (id, subject_id, title, status, timing, rationale, data_json, completed_at, created_at, updated_at)
       VALUES (?, ?, ?, 'active', ?, ?, ?, NULL, ?, ?)
-    `).run(id, input.thingId ?? null, input.title.trim(), input.timing ?? "later", input.rationale ?? null, stringify(input.data ?? {}), createdAt, createdAt);
+    `).run(id, input.subjectId ?? null, input.title.trim(), input.timing ?? "later", input.rationale ?? null, stringify(input.data ?? {}), createdAt, createdAt);
     return this.getMaintenance(id)!;
   }
 
   updateMaintenance(id: string, input: {
-    thingId?: string | null;
+    subjectId?: string | null;
     title?: string;
     status?: MaintenanceStatus;
     timing?: Timing;
@@ -356,15 +369,15 @@ export class MoeDatabase {
     if (!current) return null;
     const completedAt = input.status === "done" ? input.occurredAt ?? now() : input.status === "active" ? null : current.completedAt;
     const nextData = input.data ? { ...current.data, ...input.data } : current.data;
-    const nextThingId = input.thingId === undefined ? current.thingId : input.thingId;
+    const nextSubjectId = input.subjectId === undefined ? current.subjectId : input.subjectId;
     const nextTitle = input.title?.trim() ?? current.title;
     this.sqlite.exec("BEGIN");
     try {
       this.sqlite.prepare(`
-        UPDATE maintenance_items SET thing_id = ?, title = ?, status = ?, timing = ?, rationale = ?, data_json = ?, completed_at = ?, updated_at = ?
+        UPDATE maintenance_items SET subject_id = ?, title = ?, status = ?, timing = ?, rationale = ?, data_json = ?, completed_at = ?, updated_at = ?
         WHERE id = ?
       `).run(
-        nextThingId,
+        nextSubjectId,
         nextTitle,
         input.status ?? current.status,
         input.timing ?? current.timing,
@@ -376,7 +389,7 @@ export class MoeDatabase {
       );
       if (input.status === "done" && current.status !== "done") {
         this.recordEvent({
-          thingId: nextThingId,
+          subjectId: nextSubjectId,
           summary: input.completion?.summary?.trim() || `${nextTitle} completed`,
           occurredAt: completedAt ?? undefined,
           data: {
@@ -430,14 +443,14 @@ export class MoeDatabase {
 
   getState(): AppState {
     return {
-      things: this.listThings(),
+      subjects: this.listSubjects(),
       events: this.getHistory(),
       maintenance: this.listMaintenance(),
       conversations: this.listConversations(),
     };
   }
 
-  private mapThing(row: Record<string, unknown>): Thing {
+  private mapSubject(row: Record<string, unknown>): Subject {
     return {
       id: String(row.id),
       name: String(row.name),
@@ -453,7 +466,7 @@ export class MoeDatabase {
   private mapEvent(row: Record<string, unknown>): HistoryEvent {
     return {
       id: String(row.id),
-      thingId: row.thing_id ? String(row.thing_id) : null,
+      subjectId: row.subject_id ? String(row.subject_id) : null,
       summary: String(row.summary),
       occurredAt: String(row.occurred_at),
       data: parseJson<JsonObject>(row.data_json, {}),
@@ -464,8 +477,8 @@ export class MoeDatabase {
   private mapMaintenance(row: Record<string, unknown>): MaintenanceItem {
     return {
       id: String(row.id),
-      thingId: row.thing_id ? String(row.thing_id) : null,
-      thingName: row.thing_name ? String(row.thing_name) : null,
+      subjectId: row.subject_id ? String(row.subject_id) : null,
+      subjectName: row.subject_name ? String(row.subject_name) : null,
       title: String(row.title),
       status: String(row.status) as MaintenanceStatus,
       timing: String(row.timing) as Timing,

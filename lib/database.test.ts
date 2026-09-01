@@ -14,7 +14,7 @@ afterEach(() => {
 describe("MoeDatabase", () => {
   it("seeds a believable local world", () => {
     const db = new MoeDatabase(":memory:");
-    expect(db.listThings().map((thing) => thing.name).sort()).toEqual([
+    expect(db.listSubjects().map((subject) => subject.name).sort()).toEqual([
       "4Runner",
       "Bosch dishwasher",
       "Espresso machine",
@@ -27,9 +27,9 @@ describe("MoeDatabase", () => {
 
   it("records one linked canonical Event without overwriting the completed plan", () => {
     const db = new MoeDatabase(":memory:", false);
-    const thing = db.createThing({ name: "Road bike" });
+    const subject = db.createSubject({ name: "Road bike" });
     const item = db.createMaintenance({
-      thingId: thing.id,
+      subjectId: subject.id,
       title: "Replace chain",
       timing: "this_month",
       rationale: "Chain checker reached replacement threshold.",
@@ -48,8 +48,8 @@ describe("MoeDatabase", () => {
     db.updateMaintenance(item.id, { status: "done", occurredAt: "2026-08-29T12:00:00.000Z" });
 
     expect(db.listMaintenance()).toEqual([]);
-    expect(db.getHistory(thing.id)).toHaveLength(1);
-    expect(db.getHistory(thing.id)[0]).toMatchObject({
+    expect(db.getHistory(subject.id)).toHaveLength(1);
+    expect(db.getHistory(subject.id)[0]).toMatchObject({
       summary: "Bike chain replaced",
       data: {
         maintenanceItemId: item.id,
@@ -66,9 +66,9 @@ describe("MoeDatabase", () => {
 
   it("archives an obsolete intention without recording completion", () => {
     const db = new MoeDatabase(":memory:", false);
-    const thing = db.createThing({ name: "Dyson V15 Detect" });
+    const subject = db.createSubject({ name: "Dyson V15 Detect" });
     const item = db.createMaintenance({
-      thingId: thing.id,
+      subjectId: subject.id,
       title: "Replace battery",
       timing: "later",
       rationale: "Speculative replacement reminder.",
@@ -77,19 +77,19 @@ describe("MoeDatabase", () => {
     const archived = db.updateMaintenance(item.id, { status: "archived" });
 
     expect(archived).toMatchObject({ id: item.id, status: "archived", completedAt: null });
-    expect(db.listMaintenance({ thingId: thing.id })).toEqual([]);
-    expect(db.getHistory(thing.id)).toEqual([]);
+    expect(db.listMaintenance({ subjectId: subject.id })).toEqual([]);
+    expect(db.getHistory(subject.id)).toEqual([]);
     db.close();
   });
 
-  it("persists Things, Events, MaintenanceItems, and Conversations after restart", () => {
+  it("persists Subjects, Events, MaintenanceItems, and Conversations after restart", () => {
     const directory = mkdtempSync(join(tmpdir(), "moe-database-"));
     directories.push(directory);
     const path = join(directory, "moe.db");
     const first = new MoeDatabase(path, false);
-    const thing = first.createThing({ name: "2026 4Runner", carePreferences: "Keep forever." });
-    first.recordEvent({ thingId: thing.id, summary: "Purchased" });
-    first.createMaintenance({ thingId: thing.id, title: "5,000-mile service", timing: "later" });
+    const subject = first.createSubject({ name: "2026 4Runner", carePreferences: "Keep forever." });
+    first.recordEvent({ subjectId: subject.id, summary: "Purchased" });
+    first.createMaintenance({ subjectId: subject.id, title: "5,000-mile service", timing: "later" });
     const conversation = first.createConversation("New 4Runner");
     first.saveConversation(conversation.id, {
       messages: [{ id: "message-1", role: "user", text: "I just bought it", createdAt: "2026-08-29T12:00:00.000Z" }],
@@ -98,15 +98,15 @@ describe("MoeDatabase", () => {
     first.close();
 
     const reopened = new MoeDatabase(path, false);
-    expect(reopened.searchThings("2026")[0].carePreferences).toBe("Keep forever.");
-    expect(reopened.getHistory(thing.id)[0].summary).toBe("Purchased");
-    expect(reopened.listMaintenance({ thingId: thing.id })[0].title).toBe("5,000-mile service");
+    expect(reopened.searchSubjects("2026")[0].carePreferences).toBe("Keep forever.");
+    expect(reopened.getHistory(subject.id)[0].summary).toBe("Purchased");
+    expect(reopened.listMaintenance({ subjectId: subject.id })[0].title).toBe("5,000-mile service");
     expect(reopened.getConversation(conversation.id)?.messages[0].text).toBe("I just bought it");
     expect(reopened.getConversationSnapshot(conversation.id)).toEqual({ version: 1, history: [] });
     reopened.close();
   });
 
-  it("adds identity-reconciliation fields to an existing database", () => {
+  it("renames legacy Thing storage without losing attributed state", () => {
     const directory = mkdtempSync(join(tmpdir(), "moe-database-migration-"));
     directories.push(directory);
     const path = join(directory, "moe.db");
@@ -119,42 +119,74 @@ describe("MoeDatabase", () => {
         attributes_json TEXT NOT NULL DEFAULT '{}',
         care_preferences TEXT,
         created_at TEXT NOT NULL
-      )
+      );
+      CREATE TABLE events (
+        id TEXT PRIMARY KEY,
+        thing_id TEXT REFERENCES things(id) ON DELETE SET NULL,
+        summary TEXT NOT NULL,
+        occurred_at TEXT NOT NULL,
+        data_json TEXT NOT NULL DEFAULT '{}',
+        created_at TEXT NOT NULL
+      );
+      CREATE TABLE maintenance_items (
+        id TEXT PRIMARY KEY,
+        thing_id TEXT REFERENCES things(id) ON DELETE SET NULL,
+        title TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        timing TEXT NOT NULL DEFAULT 'later',
+        rationale TEXT,
+        data_json TEXT NOT NULL DEFAULT '{}',
+        completed_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      INSERT INTO things VALUES ('legacy-subject', 'Existing Thing', 'Appliance', '{}', 'Keep it running.', '2026-01-01');
+      INSERT INTO events VALUES ('legacy-event', 'legacy-subject', 'Filter cleaned', '2026-02-01', '{}', '2026-02-01');
+      INSERT INTO maintenance_items VALUES ('legacy-maintenance', 'legacy-subject', 'Wash filter', 'active', 'later', NULL, '{}', NULL, '2026-02-01', '2026-02-01');
     `);
     legacy.close();
 
     const migrated = new MoeDatabase(path, false);
-    const thing = migrated.createThing({ name: "Existing Thing" });
-    expect(thing).toMatchObject({ archivedAt: null, mergedIntoId: null });
+    expect(migrated.getSubject("legacy-subject")).toMatchObject({
+      name: "Existing Thing",
+      carePreferences: "Keep it running.",
+      archivedAt: null,
+      mergedIntoId: null,
+    });
+    expect(migrated.getHistory("legacy-subject")[0].summary).toBe("Filter cleaned");
+    expect(migrated.getMaintenance("legacy-maintenance")).toMatchObject({
+      subjectId: "legacy-subject",
+      title: "Wash filter",
+    });
     migrated.close();
   });
 
-  it("archives retired Things without deleting their history", () => {
+  it("archives retired Subjects without deleting their history", () => {
     const db = new MoeDatabase(":memory:", false);
-    const thing = db.createThing({ name: "Bosch dishwasher" });
-    db.recordEvent({ thingId: thing.id, summary: "Drain pump replaced" });
+    const subject = db.createSubject({ name: "Bosch dishwasher" });
+    db.recordEvent({ subjectId: subject.id, summary: "Drain pump replaced" });
 
-    const archived = db.archiveThing(thing.id);
+    const archived = db.archiveSubject(subject.id);
 
-    expect(db.listThings()).toEqual([]);
-    expect(db.listThings({ includeArchived: true })).toHaveLength(1);
+    expect(db.listSubjects()).toEqual([]);
+    expect(db.listSubjects({ includeArchived: true })).toHaveLength(1);
     expect(archived?.archivedAt).not.toBeNull();
-    expect(db.getHistory(thing.id)[0].summary).toBe("Drain pump replaced");
+    expect(db.getHistory(subject.id)[0].summary).toBe("Drain pump replaced");
     db.close();
   });
 
   it("atomically merges attributed state into an agent-specified survivor", () => {
     const db = new MoeDatabase(":memory:", false);
-    const generic = db.createThing({
+    const generic = db.createSubject({
       name: "Costco Dyson",
       attributes: { brand: "Dyson", retailer: "Costco" },
       carePreferences: "Group routine care.",
     });
-    const specific = db.createThing({ name: "Dyson V12", attributes: { brand: "Dyson", model: "V12" } });
-    db.recordEvent({ thingId: generic.id, summary: "Filter cleaned" });
-    db.createMaintenance({ thingId: specific.id, title: "Clean brush bar" });
+    const specific = db.createSubject({ name: "Dyson V12", attributes: { brand: "Dyson", model: "V12" } });
+    db.recordEvent({ subjectId: generic.id, summary: "Filter cleaned" });
+    db.createMaintenance({ subjectId: specific.id, title: "Clean brush bar" });
 
-    const merged = db.mergeThings({
+    const merged = db.mergeSubjects({
       keepId: specific.id,
       absorbId: generic.id,
       survivor: {
@@ -165,27 +197,27 @@ describe("MoeDatabase", () => {
       },
     });
 
-    expect(db.listThings()).toEqual([merged.thing]);
+    expect(db.listSubjects()).toEqual([merged.subject]);
     expect(merged).toMatchObject({ eventsMoved: 1, maintenanceMoved: 0 });
-    expect(merged.thing.attributes).toEqual({ brand: "Dyson", model: "V12 Detect Slim", retailer: "Costco" });
-    expect(merged.absorbedThing).toMatchObject({ archivedAt: expect.any(String), mergedIntoId: specific.id });
+    expect(merged.subject.attributes).toEqual({ brand: "Dyson", model: "V12 Detect Slim", retailer: "Costco" });
+    expect(merged.absorbedSubject).toMatchObject({ archivedAt: expect.any(String), mergedIntoId: specific.id });
     expect(db.getHistory(specific.id)).toHaveLength(1);
-    expect(db.listMaintenance({ thingId: specific.id })).toHaveLength(1);
+    expect(db.listMaintenance({ subjectId: specific.id })).toHaveLength(1);
     db.close();
   });
 
-  it("reassigns history and maintenance when one Thing becomes two", () => {
+  it("reassigns history and maintenance when one Subject becomes two", () => {
     const db = new MoeDatabase(":memory:", false);
-    const original = db.createThing({ name: "Downstairs Dyson" });
-    const upstairs = db.createThing({ name: "Upstairs Dyson" });
-    const event = db.recordEvent({ thingId: original.id, summary: "Filter cleaned" });
-    const maintenance = db.createMaintenance({ thingId: original.id, title: "Wash filter" });
+    const original = db.createSubject({ name: "Downstairs Dyson" });
+    const upstairs = db.createSubject({ name: "Upstairs Dyson" });
+    const event = db.recordEvent({ subjectId: original.id, summary: "Filter cleaned" });
+    const maintenance = db.createMaintenance({ subjectId: original.id, title: "Wash filter" });
 
-    db.updateEvent(event.id, { thingId: upstairs.id });
-    db.updateMaintenance(maintenance.id, { thingId: upstairs.id });
+    db.updateEvent(event.id, { subjectId: upstairs.id });
+    db.updateMaintenance(maintenance.id, { subjectId: upstairs.id });
 
     expect(db.getHistory(upstairs.id)).toHaveLength(1);
-    expect(db.listMaintenance({ thingId: upstairs.id })).toHaveLength(1);
+    expect(db.listMaintenance({ subjectId: upstairs.id })).toHaveLength(1);
     expect(db.getHistory(original.id)).toEqual([]);
     db.close();
   });

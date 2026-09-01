@@ -14,9 +14,9 @@ Optimize for **days-to-learning**, code readability, and ease of modification by
 
 ## Mission and prototype wedge
 
-The broader mission is to help people keep what matters going. This prototype begins with physical Things because their identity, history, condition, and maintenance are concrete enough to test that idea end to end.
+The broader mission is to help people keep what matters going. This prototype begins with physical Subjects because their identity, history, condition, and maintenance are concrete enough to test that idea end to end.
 
-Do not generalize the prototype around every possible kind of responsibility. People, relationships, practices, communities, and institutions are not Things in the current model. Their place in the mission is a future product question, not a reason to add generic entities or vague agent capabilities now.
+Do not generalize the prototype around every possible kind of responsibility. People, relationships, practices, communities, and institutions are not Subjects in the current model. Their place in the mission is a future product question, not a reason to add generic entities or vague agent capabilities now.
 
 ---
 
@@ -24,7 +24,7 @@ Do not generalize the prototype around every possible kind of responsibility. Pe
 
 The core question:
 
-**Does a ChatGPT-like agent that remembers your physical Things and mediates their care feel meaningfully better than generic chat/search?**
+**Does a ChatGPT-like agent that remembers your physical Subjects and mediates their care feel meaningfully better than generic chat/search?**
 
 The prototype should let us experience:
 
@@ -36,7 +36,7 @@ The prototype should let us experience:
                 │
           ┌─────┴─────┐
           ▼           ▼
-        THINGS     MAINTENANCE
+       INVENTORY   MAINTENANCE
       durable state   attention
 ```
 
@@ -83,7 +83,7 @@ The web application should be responsive enough to use comfortably from a phone.
 Only three surfaces matter.
 
 ```text
-        CHAT            THINGS          MAINTENANCE
+        CHAT          INVENTORY         MAINTENANCE
 ```
 
 ## Chat
@@ -101,9 +101,9 @@ Start with:
 
 Eventually images/media matter greatly, but they don't need to block the first usable build.
 
-## Things
+## Inventory
 
-A flat list of maintained Things.
+A flat list of maintained Subjects.
 
 Seed believable fake data:
 
@@ -115,7 +115,7 @@ Bosch dishwasher
 Espresso machine
 ```
 
-A Thing detail can remain extremely small:
+A Subject detail can remain extremely small:
 
 ```text
 4Runner
@@ -193,10 +193,10 @@ list_maintenance
         ▼
 <MaintenanceList />
 
-get_thing
+get_subject
         │
         ▼
-<ThingCard />
+<SubjectCard />
 
 create_maintenance
         │
@@ -226,7 +226,7 @@ Don't build a second application workflow behind the buttons.
 For the first real persistent version:
 
 ```text
-Thing
+Subject
 Event
 MaintenanceItem
 Conversation
@@ -238,7 +238,7 @@ Do not implement generic relations yet.
 
 Conceptually they may belong in the long-term product, but we don't need them to learn whether the core interaction works.
 
-## Thing
+## Subject
 
 ```text
 id
@@ -250,15 +250,15 @@ archived_at?
 merged_into_id?
 ```
 
-A Thing's identity is revisable. Archiving preserves retired or absorbed records; merging or splitting should preserve Events and MaintenanceItems rather than treating the first representation as final.
+A Subject's identity is revisable. Archiving preserves retired or absorbed records; merging or splitting should preserve Events and MaintenanceItems rather than treating the first representation as final.
 
-Keep attributes sparse. Identity, stable configuration, and directly current characteristics belong on the Thing. Historical readings, completed work, observations, and findings belong in Events rather than mirrored attributes such as `current_mileage` or `last_service`.
+Keep attributes sparse. Identity, stable configuration, and directly current characteristics belong on the Subject. Historical readings, completed work, observations, and findings belong in Events rather than mirrored attributes such as `current_mileage` or `last_service`.
 
 ## Event
 
 ```text
 id
-thing_id?
+subject_id?
 summary
 occurred_at
 data
@@ -270,7 +270,7 @@ Events are the canonical history. Their loose data can retain readings, completi
 
 ```text
 id
-thing_id?
+subject_id?
 title
 status
 timing
@@ -297,13 +297,13 @@ The tools are one of the most important parts of the prototype.
 Start around here:
 
 ```text
-Things
-  search_things
-  get_thing
-  create_thing
-  update_thing
-  archive_thing
-  merge_things
+Subjects
+  search_subjects
+  get_subject
+  create_subject
+  update_subject
+  archive_subject
+  merge_subjects
 
 History
   get_history
@@ -346,7 +346,7 @@ Research when knowledge is needed.
 Use durable application state rather than relying on conversation
 memory for facts that should persist.
 
-Search before creating Things.
+Search before creating Subjects.
 
 Record meaningful events when useful.
 
@@ -355,7 +355,7 @@ Maintain a useful set of future maintenance items.
 Do not overwhelm the user with every theoretically possible
 maintenance action.
 
-Mediate recommendations based on the Thing, its history, and what
+Mediate recommendations based on the Subject, its history, and what
 you understand about how the user wants to care for it.
 
 Prefer maintenance at the granularity at which the user actually
@@ -404,7 +404,7 @@ Build:
 1. Responsive application shell.
 2. ChatGPT-like sidebar.
 3. Working Nanocodex conversation with streaming.
-4. Fake Things surface.
+4. Fake Inventory surface.
 5. Fake Maintenance surface.
 6. Reusable inline MaintenanceCard.
 7. Good-enough phone layout.
@@ -430,8 +430,8 @@ I want to keep it forever."
             ▼
 
 AGENT
-create_thing(...)
-update_thing(care_preferences=...)
+create_subject(...)
+update_subject(care_preferences=...)
 
             │
             ▼
@@ -534,7 +534,7 @@ moe/
 ├── app/
 ├── components/
 │   ├── chat/
-│   ├── things/
+│   ├── subjects/
 │   └── maintenance/
 │
 ├── agent/
@@ -573,7 +573,7 @@ Do not build yet:
 - parts inventory
 - service-provider marketplace
 - graph database
-- Thing relationships
+- Subject relationships
 - rich ontology
 - manufacturer schedule importer
 - elaborate knowledge ingestion

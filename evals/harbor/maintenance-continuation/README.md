@@ -1,6 +1,6 @@
 # Maintenance continuation evals
 
-This dataset begins with a known Thing, care preference, and active maintenance plan. It tests whether the agent keeps that plan useful after real work and new evidence arrive.
+This dataset begins with a known Subject, care preference, and active maintenance plan. It tests whether the agent keeps that plan useful after real work and new evidence arrive.
 
 The initial cases cover:
 

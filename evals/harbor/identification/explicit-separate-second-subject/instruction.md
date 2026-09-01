@@ -1,0 +1,1 @@
+{"case":"explicit-separate-second-subject","initialSubjects":[{"key":"upstairs","name":"Upstairs Dyson V15 Detect","category":"Appliance","attributes":{"brand":"Dyson","model":"V15 Detect","location":"Upstairs"}}],"turns":["I bought another Dyson V15 Detect for downstairs. It is a separate vacuum. Track it too."]}

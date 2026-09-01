@@ -1,1 +1,1 @@
-{"case":"component-history","initialThings":[{"name":"4Runner","category":"Vehicle","attributes":{"year":"2019","make":"Toyota","model":"4Runner"}}],"turns":["The shop replaced the 4Runner's battery yesterday. Remember that."]}
+{"case":"component-history","initialSubjects":[{"name":"4Runner","category":"Vehicle","attributes":{"year":"2019","make":"Toyota","model":"4Runner"}}],"turns":["The shop replaced the 4Runner's battery yesterday. Remember that."]}

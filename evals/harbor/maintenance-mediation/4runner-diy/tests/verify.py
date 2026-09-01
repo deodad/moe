@@ -41,7 +41,7 @@ mirror_schedule_opened = any(
     and any(domain in serialized_call(tool) for domain in ["manuals.plus", "device.report"])
     for tool in web_calls
 )
-all_attached = bool(items) and all(item["thingId"] == initial["things"][0]["id"] for item in items)
+all_attached = bool(items) and all(item["subjectId"] == initial["subjects"][0]["id"] for item in items)
 useful_plan_size = 2 <= len(items) <= 7
 
 titles = [item["title"].lower() for item in items]
@@ -55,7 +55,7 @@ distinct_diy_actions = sum(action_families.values()) >= 2
 source_retained = any(item.get("data", {}).get("source") for item in items)
 serialized = json.dumps(items).lower()
 has_timing_basis = any(term in serialized for term in ["mile", "month", "year", "interval"])
-no_unrelated_mutation = state["events"] == initial["events"] and state["things"] == initial["things"]
+no_unrelated_mutation = state["events"] == initial["events"] and state["subjects"] == initial["subjects"]
 withheld_without_primary = manufacturer_schedule_opened or not items
 
 metrics = {
@@ -66,7 +66,7 @@ metrics = {
     "withheld_without_primary": float(withheld_without_primary),
     "useful_plan_size": float(useful_plan_size),
     "distinct_diy_actions": float(distinct_diy_actions),
-    "attached_to_supplied_thing": float(all_attached),
+    "attached_to_supplied_subject": float(all_attached),
     "source_retained": float(source_retained),
     "timing_basis_retained": float(has_timing_basis),
     "no_unrelated_mutation": float(no_unrelated_mutation),

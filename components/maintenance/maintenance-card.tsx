@@ -24,7 +24,7 @@ export function MaintenanceCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-foreground">{item.title}</p>
-          {item.thingName && <p className="text-xs text-muted-foreground">{item.thingName}</p>}
+          {item.subjectName && <p className="text-xs text-muted-foreground">{item.subjectName}</p>}
         </div>
         <Badge variant="outline" className={timing[item.timing].className}>{timing[item.timing].label}</Badge>
       </div>

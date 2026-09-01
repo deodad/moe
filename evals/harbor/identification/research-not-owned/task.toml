@@ -3,7 +3,7 @@ schema_version = "1.4"
 [task]
 name = "moe/identification-research-not-owned"
 version = "0.1.0"
-description = "Do not infer ownership or create a Thing from shopping research."
+description = "Do not infer ownership or create a Subject from shopping research."
 keywords = ["moe", "identification", "ownership"]
 
 [metadata]

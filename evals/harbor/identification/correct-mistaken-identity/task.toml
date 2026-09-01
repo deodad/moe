@@ -3,7 +3,7 @@ schema_version = "1.4"
 [task]
 name = "moe/identification-correct-mistaken-identity"
 version = "0.1.0"
-description = "Correct an existing Thing's mistaken identity without creating another Thing."
+description = "Correct an existing Subject's mistaken identity without creating another Subject."
 keywords = ["moe", "identification", "correction", "deduplication"]
 
 [metadata]

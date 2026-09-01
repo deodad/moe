@@ -1,1 +1,1 @@
-{"case":"conflicting-existing-identity","initialThings":[{"name":"4Runner","category":"Vehicle","attributes":{"year":"2019","make":"Toyota","model":"4Runner"}}],"turns":["I changed the oil on my 2020 4Runner yesterday. Remember that."]}
+{"case":"conflicting-existing-identity","initialSubjects":[{"name":"4Runner","category":"Vehicle","attributes":{"year":"2019","make":"Toyota","model":"4Runner"}}],"turns":["I changed the oil on my 2020 4Runner yesterday. Remember that."]}

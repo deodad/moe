@@ -2,7 +2,7 @@
 
 import { Fragment, FormEvent, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import type { AppState, ChatMessage, MaintenanceItem, Thing, ToolActivity } from "@/lib/types";
+import type { AppState, ChatMessage, MaintenanceItem, Subject, ToolActivity } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,10 +30,10 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { MaintenanceCard } from "@/components/maintenance/maintenance-card";
 import { MaintenanceRow } from "@/components/maintenance/maintenance-row";
-import { ThingCard } from "@/components/things/thing-card";
-import { ThingListItem } from "@/components/things/thing-list-item";
+import { SubjectCard } from "@/components/subjects/subject-card";
+import { SubjectListItem } from "@/components/subjects/subject-list-item";
 
-type View = "chat" | "things" | "maintenance";
+type View = "chat" | "subjects" | "maintenance";
 
 const maintenanceGroups = [
   ["overdue", "Overdue"],
@@ -50,12 +50,12 @@ const suggestions = [
 ];
 
 const activityFields: Record<string, string> = {
-  search_things: "Searched inventory",
-  get_thing: "Looked up",
-  create_thing: "Item logged",
-  update_thing: "Item updated",
-  archive_thing: "Item archived",
-  merge_things: "Items merged",
+  search_subjects: "Searched inventory",
+  get_subject: "Looked up",
+  create_subject: "Item logged",
+  update_subject: "Item updated",
+  archive_subject: "Item archived",
+  merge_subjects: "Items merged",
   get_history: "History checked",
   record_event: "Event logged",
   update_event: "Event corrected",
@@ -75,12 +75,12 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
 }
 
-function resultThing(result: unknown): Thing | null {
+function resultSubject(result: unknown): Subject | null {
   const value = parseToolResult(result);
   const record = asRecord(value);
-  const candidate = record && "thing" in record ? asRecord(record.thing) : record;
+  const candidate = record && "subject" in record ? asRecord(record.subject) : record;
   if (!candidate || !("name" in candidate) || !("attributes" in candidate)) return null;
-  return candidate as unknown as Thing;
+  return candidate as unknown as Subject;
 }
 
 function resultMaintenance(result: unknown): MaintenanceItem[] {
@@ -94,10 +94,10 @@ function describeActivity(activity: ToolActivity): string {
   const args = activity.arguments ?? {};
   const result = asRecord(parseToolResult(activity.result));
   switch (activity.tool) {
-    case "create_thing":
-    case "update_thing":
+    case "create_subject":
+    case "update_subject":
       return String(args.name ?? result?.name ?? "—");
-    case "archive_thing":
+    case "archive_subject":
       return String(result?.name ?? "—");
     case "record_event":
     case "update_event":
@@ -110,10 +110,10 @@ function describeActivity(activity: ToolActivity): string {
         : args.status === "archived"
           ? `${String(args.title ?? result?.title ?? "item")} — archived`
           : String(args.title ?? result?.title ?? "—");
-    case "search_things":
+    case "search_subjects":
     case "list_maintenance":
-      return String(args.query ?? (args.thing_id ? "filtered by thing" : "all"));
-    case "get_thing":
+      return String(args.query ?? (args.subject_id ? "filtered by subject" : "all"));
+    case "get_subject":
       return String(result?.name ?? args.id ?? "—");
     case "web_search":
     case "web_run":
@@ -134,7 +134,7 @@ function ToolActivityView({ activity, onMaintenanceAction }: {
   activity: ToolActivity;
   onMaintenanceAction: (id: string, action: "done" | "later") => Promise<void>;
 }) {
-  const thing = resultThing(activity.result);
+  const subject = resultSubject(activity.result);
   const maintenance = resultMaintenance(activity.result);
   const field = activityFields[activity.tool] ?? activity.tool.replaceAll("_", " ");
   const value = describeActivity(activity);
@@ -151,7 +151,7 @@ function ToolActivityView({ activity, onMaintenanceAction }: {
           <Badge variant="outline" className="border-destructive/50 bg-destructive/10 text-destructive">ERROR</Badge>
         )}
       </div>
-      {thing && <ThingCard thing={thing} compact />}
+      {subject && <SubjectCard subject={subject} compact />}
       {maintenance.length > 0 && (
         <div className="space-y-2">{maintenance.slice(0, 3).map((item) => <MaintenanceCard key={item.id} item={item} onAction={onMaintenanceAction} />)}</div>
       )}
@@ -199,7 +199,7 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
   const [state, setState] = useState(initialState);
   const [view, setView] = useState<View>("chat");
   const [activeConversationId, setActiveConversationId] = useState(initialState.conversations[0]?.id ?? "");
-  const [selectedThingId, setSelectedThingId] = useState(initialState.things.find((thing) => thing.name === "4Runner")?.id ?? initialState.things[0]?.id ?? "");
+  const [selectedSubjectId, setSelectedSubjectId] = useState(initialState.subjects.find((subject) => subject.name === "4Runner")?.id ?? initialState.subjects[0]?.id ?? "");
   const [message, setMessage] = useState("");
   const [streamMessage, setStreamMessage] = useState<ChatMessage | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -207,7 +207,7 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
   const endRef = useRef<HTMLDivElement>(null);
 
   const activeConversation = state.conversations.find((item) => item.id === activeConversationId) ?? state.conversations[0];
-  const selectedThing = state.things.find((item) => item.id === selectedThingId) ?? state.things[0];
+  const selectedSubject = state.subjects.find((item) => item.id === selectedSubjectId) ?? state.subjects[0];
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [activeConversation?.messages, streamMessage]);
 
@@ -302,11 +302,11 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
     }
   }
 
-  const viewTitle = view === "chat" ? activeConversation?.title || "New conversation" : view === "things" ? "Inventory" : "Maintenance";
+  const viewTitle = view === "chat" ? activeConversation?.title || "New conversation" : view === "subjects" ? "Inventory" : "Maintenance";
   const viewDescription = view === "chat"
     ? "Your physical world, remembered"
-    : view === "things"
-      ? `${state.things.length} items in inventory`
+    : view === "subjects"
+      ? `${state.subjects.length} items in inventory`
       : "What deserves attention now";
 
   return (
@@ -334,8 +334,8 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem className="border-b border-border">
-                  <SidebarMenuButton isActive={view === "things"} onClick={() => setView("things")} className="rounded-none">
-                    <NavDot active={view === "things"} /> Inventory
+                  <SidebarMenuButton isActive={view === "subjects"} onClick={() => setView("subjects")} className="rounded-none">
+                    <NavDot active={view === "subjects"} /> Inventory
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
@@ -452,22 +452,22 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
           </main>
         )}
 
-        {view === "things" && selectedThing && (
+        {view === "subjects" && selectedSubject && (
           <ScrollArea className="min-h-0 flex-1">
             <main className="p-4 sm:p-8">
               <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[220px_1fr]">
                 <section className="space-y-3">
                   <Input placeholder="Find an item" disabled />
                   <div className="border border-border">
-                    {state.things.map((thing) => (
-                      <ThingListItem key={thing.id} thing={thing} selected={selectedThing.id === thing.id} onClick={() => setSelectedThingId(thing.id)} />
+                    {state.subjects.map((subject) => (
+                      <SubjectListItem key={subject.id} subject={subject} selected={selectedSubject.id === subject.id} onClick={() => setSelectedSubjectId(subject.id)} />
                     ))}
                   </div>
                 </section>
                 <section className="space-y-4">
-                  <ThingCard thing={selectedThing} maintenance={state.maintenance.filter((item) => item.thingId === selectedThing.id)} history={state.events.filter((item) => item.thingId === selectedThing.id)} />
-                  <Button variant="outline" onClick={() => { setView("chat"); setMessage(`Tell me about my ${selectedThing.name}.`); }}>
-                    Ask about {selectedThing.name}
+                  <SubjectCard subject={selectedSubject} maintenance={state.maintenance.filter((item) => item.subjectId === selectedSubject.id)} history={state.events.filter((item) => item.subjectId === selectedSubject.id)} />
+                  <Button variant="outline" onClick={() => { setView("chat"); setMessage(`Tell me about my ${selectedSubject.name}.`); }}>
+                    Ask about {selectedSubject.name}
                   </Button>
                 </section>
               </div>
@@ -481,7 +481,7 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
               <div className="mx-auto max-w-4xl">
                 <div className="mb-6 max-w-xl">
                   <h2 className="text-3xl font-semibold tracking-[-0.03em]">A useful attention queue.</h2>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">Broad timing windows, shaped around how you actually care for each thing.</p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">Broad timing windows, shaped around how you actually care for each item.</p>
                 </div>
                 <div className="border border-line-strong">
                   <Table>
@@ -517,8 +517,8 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
           <button onClick={() => setView("chat")} className={cn("flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground", view === "chat" && "font-semibold text-foreground")}>
             <NavDot active={view === "chat"} /> Chat
           </button>
-          <button onClick={() => setView("things")} className={cn("flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground", view === "things" && "font-semibold text-foreground")}>
-            <NavDot active={view === "things"} /> Inventory
+          <button onClick={() => setView("subjects")} className={cn("flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground", view === "subjects" && "font-semibold text-foreground")}>
+            <NavDot active={view === "subjects"} /> Inventory
           </button>
           <button onClick={() => setView("maintenance")} className={cn("flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground", view === "maintenance" && "font-semibold text-foreground")}>
             <NavDot active={view === "maintenance"} /> Maintenance

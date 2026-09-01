@@ -3,7 +3,7 @@ schema_version = "1.4"
 [task]
 name = "moe/identification-model-sensitive-two-vacuums"
 version = "0.1.0"
-description = "Clarify between existing Things before giving model-sensitive part guidance."
+description = "Clarify between existing Subjects before giving model-sensitive part guidance."
 keywords = ["moe", "identification", "uncertainty", "clarification"]
 
 [metadata]

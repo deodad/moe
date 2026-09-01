@@ -1,1 +1,1 @@
-{"case":"enrich-existing-identity","initialThings":[{"name":"Dyson cordless vacuum","category":"Appliance","attributes":{"retailer":"Costco"}}],"turns":["I checked the label on my Dyson. It is a V15 Detect."]}
+{"case":"enrich-existing-identity","initialSubjects":[{"name":"Dyson cordless vacuum","category":"Appliance","attributes":{"retailer":"Costco"}}],"turns":["I checked the label on my Dyson. It is a V15 Detect."]}

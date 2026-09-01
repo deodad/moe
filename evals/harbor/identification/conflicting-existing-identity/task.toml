@@ -3,7 +3,7 @@ schema_version = "1.4"
 [task]
 name = "moe/identification-conflicting-existing-identity"
 version = "0.1.0"
-description = "Clarify whether conflicting identity evidence is a correction or another Thing before mutating state."
+description = "Clarify whether conflicting identity evidence is a correction or another Subject before mutating state."
 keywords = ["moe", "identification", "clarification", "conflict"]
 
 [metadata]

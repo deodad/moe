@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { agentInstructionsWithThings } from "@/agent/context";
+import { agentInstructionsWithSubjects } from "@/agent/context";
 
-describe("agentInstructionsWithThings", () => {
-  it("includes the complete compact Thing index with stable IDs", () => {
-    const instructions = agentInstructionsWithThings([{
-      id: "thing-1",
+describe("agentInstructionsWithSubjects", () => {
+  it("includes the complete compact Subject index with stable IDs", () => {
+    const instructions = agentInstructionsWithSubjects([{
+      id: "subject-1",
       name: "Dyson V15 Detect",
       category: "Appliance",
       attributes: { model: "V15 Detect" },
@@ -14,7 +14,7 @@ describe("agentInstructionsWithThings", () => {
       createdAt: "2026-08-30T00:00:00.000Z",
     }]);
 
-    expect(instructions).toContain('"id": "thing-1"');
+    expect(instructions).toContain('"id": "subject-1"');
     expect(instructions).toContain('"name": "Dyson V15 Detect"');
     expect(instructions).toContain('"model": "V15 Detect"');
     expect(instructions).toContain('"carePreferences": "Group routine care."');

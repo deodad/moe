@@ -1,1 +1,1 @@
-{"case":"ambiguous-two-bikes","initialThings":[{"name":"Road bike","category":"Bike","attributes":{"brand":"Specialized"}},{"name":"Mountain bike","category":"Bike","attributes":{"brand":"Santa Cruz"}}],"turns":["The bike chain is skipping. What should I do, and remember this issue."]}
+{"case":"ambiguous-two-bikes","initialSubjects":[{"name":"Road bike","category":"Bike","attributes":{"brand":"Specialized"}},{"name":"Mountain bike","category":"Bike","attributes":{"brand":"Santa Cruz"}}],"turns":["The bike chain is skipping. What should I do, and remember this issue."]}

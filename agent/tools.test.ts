@@ -16,10 +16,10 @@ describe("application tools", () => {
   it("stores readings and findings in Event details", async () => {
     const db = new MoeDatabase(":memory:", false);
     const tools = createApplicationTools(db);
-    const thing = db.createThing({ name: "Baratza Encore", attributes: { model: "Encore" } });
+    const subject = db.createSubject({ name: "Baratza Encore", attributes: { model: "Encore" } });
 
     const event = await call(tools, "record_event", {
-      thing_id: thing.id,
+      subject_id: subject.id,
       summary: "Burrs inspected",
       occurred_at: "2026-08-30",
       source: "Owner observation",
@@ -30,21 +30,42 @@ describe("application tools", () => {
       source: "Owner observation",
       details: { condition: "Clean", coffee_throughput: "18 lb" },
     });
-    expect(db.getThing(thing.id)?.attributes).toEqual({ model: "Encore" });
+    expect(db.getSubject(subject.id)?.attributes).toEqual({ model: "Encore" });
     db.close();
   });
 
   it("archives obsolete maintenance without creating history", async () => {
     const db = new MoeDatabase(":memory:", false);
     const tools = createApplicationTools(db);
-    const thing = db.createThing({ name: "Dyson V15 Detect" });
-    const item = db.createMaintenance({ thingId: thing.id, title: "Replace battery", timing: "later" });
+    const subject = db.createSubject({ name: "Dyson V15 Detect" });
+    const item = db.createMaintenance({ subjectId: subject.id, title: "Replace battery", timing: "later" });
 
     await call(tools, "update_maintenance", { id: item.id, status: "archived" });
 
     expect(db.getMaintenance(item.id)?.status).toBe("archived");
-    expect(db.listMaintenance({ thingId: thing.id })).toEqual([]);
-    expect(db.getHistory(thing.id)).toEqual([]);
+    expect(db.listMaintenance({ subjectId: subject.id })).toEqual([]);
+    expect(db.getHistory(subject.id)).toEqual([]);
+    db.close();
+  });
+
+  it("loads a Subject with its complete history and active maintenance", async () => {
+    const db = new MoeDatabase(":memory:", false);
+    const tools = createApplicationTools(db);
+    const subject = db.createSubject({ name: "4Runner", carePreferences: "Uses a Toyota shop." });
+    for (let index = 0; index < 12; index += 1) {
+      db.recordEvent({ subjectId: subject.id, summary: `Service record ${index + 1}` });
+    }
+    db.createMaintenance({ subjectId: subject.id, title: "Next Toyota service" });
+
+    const context = await call(tools, "get_subject", { id: subject.id }) as {
+      subject: { id: string };
+      history: unknown[];
+      maintenance: unknown[];
+    };
+
+    expect(context.subject.id).toBe(subject.id);
+    expect(context.history).toHaveLength(12);
+    expect(context.maintenance).toHaveLength(1);
     db.close();
   });
 
@@ -52,8 +73,8 @@ describe("application tools", () => {
     const db = new MoeDatabase(":memory:", false);
     const tools = createApplicationTools(db);
 
-    expect(await call(tools, "search_things", { query: "4Runner" })).toEqual([]);
-    const thing = await call(tools, "create_thing", {
+    expect(await call(tools, "search_subjects", { query: "4Runner" })).toEqual([]);
+    const subject = await call(tools, "create_subject", {
       name: "4Runner",
       category: "Vehicle",
       attributes: { year: "2026", make: "Toyota", model: "4Runner" },
@@ -61,7 +82,7 @@ describe("application tools", () => {
     }) as { id: string };
 
     const firstService = await call(tools, "create_maintenance", {
-      thing_id: thing.id,
+      subject_id: subject.id,
       title: "5,000-mile service",
       timing: "later",
       rationale: "Initial Toyota service interval.",
@@ -69,8 +90,8 @@ describe("application tools", () => {
       details: { operations: ["Rotate tires", "Inspect brakes"] },
     }) as { id: string };
 
-    await call(tools, "update_thing", {
-      id: thing.id,
+    await call(tools, "update_subject", {
+      id: subject.id,
       care_preferences: "Keep forever. Toyota handles scheduled service; track service intervals, not separate inspections.",
     });
     await call(tools, "update_maintenance", {
@@ -82,18 +103,18 @@ describe("application tools", () => {
       completion_details: { odometer: "5,120 miles", provider: "Toyota" },
     });
     await call(tools, "create_maintenance", {
-      thing_id: thing.id,
+      subject_id: subject.id,
       title: "10,000-mile service",
       timing: "later",
       rationale: "Next shop service interval.",
     });
 
-    expect(db.getThing(thing.id)?.carePreferences).toContain("Toyota handles scheduled service");
+    expect(db.getSubject(subject.id)?.carePreferences).toContain("Toyota handles scheduled service");
     expect(db.getMaintenance(firstService.id)?.data).toEqual({
       source: "Toyota maintenance guide",
       details: { operations: ["Rotate tires", "Inspect brakes"] },
     });
-    expect(db.getHistory(thing.id)[0]).toMatchObject({
+    expect(db.getHistory(subject.id)[0]).toMatchObject({
       summary: "Toyota 5,000-mile service completed",
       data: {
         maintenanceItemId: firstService.id,
@@ -101,19 +122,19 @@ describe("application tools", () => {
         details: { odometer: "5,120 miles", provider: "Toyota" },
       },
     });
-    expect(db.listMaintenance({ thingId: thing.id }).map((item) => item.title)).toEqual(["10,000-mile service"]);
+    expect(db.listMaintenance({ subjectId: subject.id }).map((item) => item.title)).toEqual(["10,000-mile service"]);
     db.close();
   });
 
   it("exposes exactly the prototype application tools", () => {
     const db = new MoeDatabase(":memory:", false);
     expect(Object.keys(createApplicationTools(db))).toEqual([
-      "search_things",
-      "get_thing",
-      "create_thing",
-      "update_thing",
-      "archive_thing",
-      "merge_things",
+      "search_subjects",
+      "get_subject",
+      "create_subject",
+      "update_subject",
+      "archive_subject",
+      "merge_subjects",
       "get_history",
       "record_event",
       "update_event",

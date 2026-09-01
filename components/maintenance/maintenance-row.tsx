@@ -48,7 +48,7 @@ export function MaintenanceRow({
           </details>
         )}
       </TableCell>
-      <TableCell className="align-top text-sm whitespace-nowrap text-muted-foreground">{item.thingName ?? "—"}</TableCell>
+      <TableCell className="align-top text-sm whitespace-nowrap text-muted-foreground">{item.subjectName ?? "—"}</TableCell>
       <TableCell className="align-top">
         <div className="flex justify-end gap-1.5">
           <Button size="sm" onClick={() => onAction(item.id, "done")}>

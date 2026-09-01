@@ -1,6 +1,6 @@
 # Maintenance mediation evals
 
-This dataset starts after onboarding. Every case supplies a known Thing and an explicit natural-language care preference, then asks the agent to research and create an initial maintenance plan.
+This dataset starts after onboarding. Every case supplies a known Subject and an explicit natural-language care preference, then asks the agent to research and create an initial maintenance plan.
 
 The first six cases test one narrow product question across different care shapes:
 
@@ -15,7 +15,7 @@ The deterministic verifiers expose several diagnostic metrics rather than reduci
 
 The first focused Luna/Terra research comparison is recorded in [model-comparison-2026-08-30.md](model-comparison-2026-08-30.md).
 
-These evals deliberately do not test Thing creation, preference discovery, onboarding, background research, or plan refresh. Those are separate product questions.
+These evals deliberately do not test Subject creation, preference discovery, onboarding, background research, or plan refresh. Those are separate product questions.
 
 ## Run
 

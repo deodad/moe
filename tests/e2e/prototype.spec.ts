@@ -21,7 +21,7 @@ test.afterAll(async () => {
   await new Promise<void>((resolve, reject) => responsesServer.close((error) => error ? reject(error) : resolve()));
 });
 
-test("desktop Things and Maintenance share durable state", async ({ page }) => {
+test("desktop Subjects and Maintenance share durable state", async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") consoleErrors.push(message.text()); });
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -75,9 +75,9 @@ test("chat streams a real Nanocodex tool turn into durable state", async ({ page
   await fixtureScenario;
 
   const state = await page.evaluate(async () => fetch("/api/state").then((response) => response.json()));
-  const thing = state.things.find((item: { attributes: Record<string, string> }) => item.attributes.year === "2026");
-  expect(thing.carePreferences).toContain("Keep forever");
-  expect(state.maintenance.some((item: { thingId: string; title: string }) => item.thingId === thing.id && item.title === "5,000-mile service")).toBe(true);
+  const subject = state.subjects.find((item: { attributes: Record<string, string> }) => item.attributes.year === "2026");
+  expect(subject.carePreferences).toContain("Keep forever");
+  expect(state.maintenance.some((item: { subjectId: string; title: string }) => item.subjectId === subject.id && item.title === "5,000-mile service")).toBe(true);
 
   await page.reload();
   await expect(page.getByText("I added your 2026 4Runner and its first service interval.", { exact: true })).toBeVisible();
@@ -103,10 +103,10 @@ function messageReader(socket: WebSocket) {
 async function runNanocodexScenario(socket: WebSocket) {
   const reader = messageReader(socket);
   await reader.next();
-  sendTool(socket, "search", "call-search", "search_things", { query: "2026 4Runner" });
+  sendTool(socket, "search", "call-search", "search_subjects", { query: "2026 4Runner" });
 
   await reader.next();
-  sendTool(socket, "create", "call-create", "create_thing", {
+  sendTool(socket, "create", "call-create", "create_subject", {
     name: "4Runner",
     category: "Vehicle",
     attributes: { year: "2026", make: "Toyota", model: "4Runner" },
@@ -114,9 +114,9 @@ async function runNanocodexScenario(socket: WebSocket) {
   });
 
   const created = await reader.next();
-  const thing = functionOutput(created) as { id: string };
+  const subject = functionOutput(created) as { id: string };
   sendTool(socket, "maintenance", "call-maintenance", "create_maintenance", {
-    thing_id: thing.id,
+    subject_id: subject.id,
     title: "5,000-mile service",
     timing: "later",
     rationale: "The first practical service interval to track.",

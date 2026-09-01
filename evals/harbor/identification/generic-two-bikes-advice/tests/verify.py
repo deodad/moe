@@ -6,7 +6,7 @@ turn = result["turns"][0]
 state = result["finalState"]
 output = turn["output"].lower()
 identity_probe = "?" in turn["output"] and any(term in output for term in ["which bike", "road bike", "mountain bike"])
-mutation_tools = {"create_thing", "update_thing", "record_event", "create_maintenance", "update_maintenance"}
+mutation_tools = {"create_subject", "update_subject", "record_event", "create_maintenance", "update_maintenance"}
 called = {activity["tool"] for activity in turn["tools"]}
 metrics = {
     "no_unnecessary_identity_probe": float(not identity_probe),

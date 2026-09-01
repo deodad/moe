@@ -1,6 +1,6 @@
 # Maintenance revision evals
 
-These cases begin with a known Thing, an explicit care preference, and an active maintenance plan. They test whether Moe can reshape that plan when the user changes how they want to care for the Thing.
+These cases begin with a known Subject, an explicit care preference, and an active maintenance plan. They test whether Moe can reshape that plan when the user changes how they want to care for the Subject.
 
 The initial cases cover:
 

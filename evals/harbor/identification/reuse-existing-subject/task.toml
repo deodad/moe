@@ -1,9 +1,9 @@
 schema_version = "1.4"
 
 [task]
-name = "moe/identification-reuse-existing-thing"
+name = "moe/identification-reuse-existing-subject"
 version = "0.1.0"
-description = "Attach new history to an existing Thing instead of creating a duplicate."
+description = "Attach new history to an existing Subject instead of creating a duplicate."
 keywords = ["moe", "identification", "deduplication"]
 
 [metadata]

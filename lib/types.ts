@@ -1,7 +1,7 @@
 export type Timing = "overdue" | "this_week" | "this_month" | "later";
 export type MaintenanceStatus = "active" | "done" | "archived";
 
-export type Thing = {
+export type Subject = {
   id: string;
   name: string;
   category: string | null;
@@ -14,7 +14,7 @@ export type Thing = {
 
 export type HistoryEvent = {
   id: string;
-  thingId: string | null;
+  subjectId: string | null;
   summary: string;
   occurredAt: string;
   data: Record<string, unknown>;
@@ -23,8 +23,8 @@ export type HistoryEvent = {
 
 export type MaintenanceItem = {
   id: string;
-  thingId: string | null;
-  thingName: string | null;
+  subjectId: string | null;
+  subjectName: string | null;
   title: string;
   status: MaintenanceStatus;
   timing: Timing;
@@ -61,7 +61,7 @@ export type Conversation = {
 };
 
 export type AppState = {
-  things: Thing[];
+  subjects: Subject[];
   events: HistoryEvent[];
   maintenance: MaintenanceItem[];
   conversations: Conversation[];

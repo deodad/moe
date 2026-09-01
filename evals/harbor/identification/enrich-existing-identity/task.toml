@@ -3,7 +3,7 @@ schema_version = "1.4"
 [task]
 name = "moe/identification-enrich-existing-identity"
 version = "0.1.0"
-description = "Add confirmed model information to an existing partial Thing."
+description = "Add confirmed model information to an existing partial Subject."
 keywords = ["moe", "identification", "deduplication"]
 
 [metadata]
