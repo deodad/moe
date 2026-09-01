@@ -211,11 +211,12 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [activeConversation?.messages, streamMessage]);
 
-  async function newConversation() {
+  async function newConversation(initialMessage = "") {
     const response = await fetch("/api/conversations", { method: "POST" });
     const conversation = await response.json();
     setState((current) => ({ ...current, conversations: [conversation, ...current.conversations] }));
     setActiveConversationId(conversation.id);
+    setMessage(initialMessage);
     setView("chat");
   }
 
@@ -322,7 +323,7 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
               <p className="truncate font-mono text-[0.68rem] tracking-wide text-muted-foreground uppercase">Maintenance agent</p>
             </div>
           </div>
-          <Button onClick={newConversation} className="w-full">+ New chat</Button>
+          <Button onClick={() => void newConversation()} className="w-full">+ New chat</Button>
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
@@ -466,7 +467,7 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
                 </section>
                 <section className="space-y-4">
                   <SubjectCard subject={selectedSubject} maintenance={state.maintenance.filter((item) => item.subjectId === selectedSubject.id)} history={state.events.filter((item) => item.subjectId === selectedSubject.id)} />
-                  <Button variant="outline" onClick={() => { setView("chat"); setMessage(`Tell me about my ${selectedSubject.name}.`); }}>
+                  <Button variant="outline" onClick={() => void newConversation(`Tell me about my ${selectedSubject.name}.`)}>
                     Ask about {selectedSubject.name}
                   </Button>
                 </section>
