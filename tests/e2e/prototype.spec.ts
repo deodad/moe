@@ -37,9 +37,10 @@ test("desktop Subjects and Maintenance share durable state", async ({ page }) =>
   await expect(page.getByText("5,000-mile service", { exact: true })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Inventory", exact: true }).click();
-  await page.getByRole("button", { name: "4Runner Vehicle" }).click();
+  await page.locator("#subject-switcher").selectOption({ label: "4Runner" });
   await expect(page.getByText(/Keep long term/)).toBeVisible();
   await expect(page.getByText(/5,000-mile service completed/)).toBeVisible();
+  await expect(page.getByPlaceholder("Ask about 4Runner…")).toBeVisible();
 
   await page.reload();
   await page.getByRole("button", { name: "Maintenance", exact: true }).click();

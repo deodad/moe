@@ -20,4 +20,23 @@ describe("agentInstructionsWithSubjects", () => {
     expect(instructions).toContain('"carePreferences": "Group routine care."');
     expect(instructions).not.toContain("createdAt");
   });
+
+  it("identifies the Subject currently in view", () => {
+    const subject = {
+      id: "subject-1",
+      name: "4Runner",
+      category: "Vehicle",
+      attributes: { year: "2019" },
+      carePreferences: "Keep long term.",
+      archivedAt: null,
+      mergedIntoId: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    };
+
+    const instructions = agentInstructionsWithSubjects([subject], subject);
+
+    expect(instructions).toContain('currently in the Subject workspace for "4Runner"');
+    expect(instructions).toContain("subject-1");
+    expect(instructions).toContain('references such as "it", "this"');
+  });
 });

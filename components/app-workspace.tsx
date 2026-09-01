@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -31,7 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MaintenanceCard } from "@/components/maintenance/maintenance-card";
 import { MaintenanceRow } from "@/components/maintenance/maintenance-row";
 import { SubjectCard } from "@/components/subjects/subject-card";
-import { SubjectListItem } from "@/components/subjects/subject-list-item";
+import { SubjectContext } from "@/components/subjects/subject-context";
 
 type View = "chat" | "subjects" | "maintenance";
 
@@ -252,7 +251,11 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ conversationId: activeConversationId, message: text }),
+        body: JSON.stringify({
+          conversationId: activeConversationId,
+          message: text,
+          ...(view === "subjects" && selectedSubject ? { subjectId: selectedSubject.id } : {}),
+        }),
       });
       if (!response.ok || !response.body) {
         const payload = await response.json().catch(() => ({ error: "Chat request failed" })) as { error?: string };
@@ -303,11 +306,11 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
     }
   }
 
-  const viewTitle = view === "chat" ? activeConversation?.title || "New conversation" : view === "subjects" ? "Inventory" : "Maintenance";
+  const viewTitle = view === "chat" ? activeConversation?.title || "New conversation" : view === "subjects" ? selectedSubject?.name ?? "Inventory" : "Maintenance";
   const viewDescription = view === "chat"
     ? "Your physical world, remembered"
     : view === "subjects"
-      ? `${state.subjects.length} items in inventory`
+      ? `Subject workspace · ${state.subjects.length} items in inventory`
       : "What deserves attention now";
 
   return (
@@ -391,20 +394,75 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
           </div>
         </header>
 
-        {view === "chat" && (
-          <main className="flex min-h-0 flex-1 flex-col" aria-busy={sending}>
+        {(view === "chat" || view === "subjects") && (
+          <div className="flex min-h-0 flex-1">
+            {view === "subjects" && selectedSubject && (
+              <aside className="hidden w-[340px] shrink-0 border-r border-line-strong bg-muted/30 lg:flex lg:min-h-0 lg:flex-col">
+                <div className="border-b border-border p-3">
+                  <label className="mb-1.5 block font-mono text-[0.68rem] tracking-wide text-muted-foreground uppercase" htmlFor="subject-switcher">
+                    Inventory
+                  </label>
+                  <select
+                    id="subject-switcher"
+                    value={selectedSubject.id}
+                    onChange={(event) => setSelectedSubjectId(event.target.value)}
+                    className="h-10 w-full border border-line-strong bg-card px-3 text-sm font-medium outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    {state.subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}
+                  </select>
+                </div>
+                <ScrollArea className="min-h-0 flex-1">
+                  <SubjectContext
+                    subject={selectedSubject}
+                    maintenance={state.maintenance.filter((item) => item.subjectId === selectedSubject.id)}
+                    history={state.events.filter((item) => item.subjectId === selectedSubject.id)}
+                  />
+                </ScrollArea>
+              </aside>
+            )}
+          <main className="flex min-h-0 min-w-0 flex-1 flex-col" aria-busy={sending}>
             <ScrollArea className="min-h-0 flex-1">
-              <div className="mx-auto max-w-3xl px-4 py-8 sm:px-8">
+              <div className="mx-auto max-w-3xl px-4 py-6 sm:px-8 sm:py-8">
+                {view === "subjects" && selectedSubject && (
+                  <details className="mb-6 border border-line-strong bg-card lg:hidden">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
+                      <span>
+                        <span className="block font-mono text-[0.68rem] tracking-wide text-muted-foreground uppercase">Subject context</span>
+                        <span className="block font-semibold">{selectedSubject.name}</span>
+                      </span>
+                      <span className="font-mono text-xs text-muted-foreground">VIEW +</span>
+                    </summary>
+                    <div className="border-t border-border p-3">
+                      <select
+                        aria-label="Select Subject"
+                        value={selectedSubject.id}
+                        onChange={(event) => setSelectedSubjectId(event.target.value)}
+                        className="mb-3 h-10 w-full border border-line-strong bg-card px-3 text-sm font-medium outline-none"
+                      >
+                        {state.subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}
+                      </select>
+                      <SubjectContext
+                        subject={selectedSubject}
+                        maintenance={state.maintenance.filter((item) => item.subjectId === selectedSubject.id)}
+                        history={state.events.filter((item) => item.subjectId === selectedSubject.id)}
+                      />
+                    </div>
+                  </details>
+                )}
                 {(!activeConversation || activeConversation.messages.length === 0) && !streamMessage ? (
                   <div className="py-[8vh] text-center">
                     <div className="mx-auto flex size-14 items-center justify-center border border-line-strong font-mono text-xl font-semibold">
                       M
                     </div>
-                    <h2 className="mt-6 text-3xl font-semibold tracking-[-0.03em] text-foreground">What are we taking care of?</h2>
+                    <h2 className="mt-6 text-3xl font-semibold tracking-[-0.03em] text-foreground">
+                      {view === "subjects" && selectedSubject ? `What should we know about ${selectedSubject.name}?` : "What are we taking care of?"}
+                    </h2>
                     <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">
-                      Tell me what happened, ask about something you own, or work through what deserves attention next.
+                      {view === "subjects" && selectedSubject
+                        ? "Ask a question, record what happened, or decide what deserves attention next. Moe has this Subject's context in view."
+                        : "Tell me what happened, ask about something you own, or work through what deserves attention next."}
                     </p>
-                    <div className="mx-auto mt-8 grid max-w-xl gap-2 text-left sm:grid-cols-2">
+                    {view === "chat" && <div className="mx-auto mt-8 grid max-w-xl gap-2 text-left sm:grid-cols-2">
                       {suggestions.map((prompt) => (
                         <Card
                           key={prompt}
@@ -417,7 +475,7 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
                           {prompt}
                         </Card>
                       ))}
-                    </div>
+                    </div>}
                   </div>
                 ) : (
                   <div className="space-y-8">
@@ -443,7 +501,7 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
                   onChange={(event) => setMessage(event.target.value)}
                   onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void submit(); } }}
                   rows={1}
-                  placeholder="Tell Moe what happened…"
+                  placeholder={view === "subjects" && selectedSubject ? `Ask about ${selectedSubject.name}…` : "Tell Moe what happened…"}
                   className="max-h-32 min-h-10 flex-1 resize-none border-0 bg-transparent px-0 py-2 shadow-none focus-visible:ring-0"
                 />
                 <Button type="submit" size="icon" disabled={!message.trim() || sending} aria-label="Send message" className="font-mono">{"↑"}</Button>
@@ -451,29 +509,7 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
               <p className="mt-2 text-center text-[10px] text-muted-foreground">Moe can make mistakes. Check important maintenance guidance.</p>
             </div>
           </main>
-        )}
-
-        {view === "subjects" && selectedSubject && (
-          <ScrollArea className="min-h-0 flex-1">
-            <main className="p-4 sm:p-8">
-              <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[220px_1fr]">
-                <section className="space-y-3">
-                  <Input placeholder="Find an item" disabled />
-                  <div className="border border-border">
-                    {state.subjects.map((subject) => (
-                      <SubjectListItem key={subject.id} subject={subject} selected={selectedSubject.id === subject.id} onClick={() => setSelectedSubjectId(subject.id)} />
-                    ))}
-                  </div>
-                </section>
-                <section className="space-y-4">
-                  <SubjectCard subject={selectedSubject} maintenance={state.maintenance.filter((item) => item.subjectId === selectedSubject.id)} history={state.events.filter((item) => item.subjectId === selectedSubject.id)} />
-                  <Button variant="outline" onClick={() => void newConversation(`Tell me about my ${selectedSubject.name}.`)}>
-                    Ask about {selectedSubject.name}
-                  </Button>
-                </section>
-              </div>
-            </main>
-          </ScrollArea>
+          </div>
         )}
 
         {view === "maintenance" && (

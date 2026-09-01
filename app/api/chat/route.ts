@@ -84,12 +84,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = await request.json().catch(() => null) as { conversationId?: string; message?: string } | null;
+  const body = await request.json().catch(() => null) as { conversationId?: string; message?: string; subjectId?: string } | null;
   if (!body) return Response.json({ error: "Invalid chat request" }, { status: 400 });
   const message = body.message?.trim();
   if (!message) return Response.json({ error: "Message is required" }, { status: 400 });
 
   const db = getDatabase();
+  const focusedSubject = body.subjectId ? db.getSubject(body.subjectId) : null;
+  if (body.subjectId && !focusedSubject) return Response.json({ error: "Subject not found" }, { status: 404 });
   const conversation = body.conversationId
     ? db.getConversation(body.conversationId)
     : db.createConversation();
@@ -149,7 +151,7 @@ export async function POST(request: Request) {
           model,
           thinking: "low",
           reasoningMode: "standard",
-          instructions: agentInstructionsWithSubjects(db.listSubjects()),
+          instructions: agentInstructionsWithSubjects(db.listSubjects(), focusedSubject),
           tools: {
             ...createApplicationTools(db),
             [webTool.name]: webTool,
