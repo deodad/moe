@@ -1,6 +1,7 @@
 "use client";
 
 import type { MaintenanceItem, Timing } from "@/lib/types";
+import { friendlyDueDate } from "@/lib/maintenance-schedule";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -34,7 +35,9 @@ export function MaintenanceRow({
   return (
     <TableRow>
       <TableCell className="whitespace-nowrap align-top">
-        <Badge variant="outline" className={timing[item.timing].className}>{timing[item.timing].label}</Badge>
+        <Badge variant="outline" className={timing[item.timing].className}>
+          {item.dueDate ? friendlyDueDate(item.dueDate) : timing[item.timing].label}
+        </Badge>
       </TableCell>
       <TableCell className="align-top whitespace-normal">
         <p className="font-medium text-foreground">{item.title}</p>
@@ -55,7 +58,7 @@ export function MaintenanceRow({
             Done
           </Button>
           <Button size="sm" variant="outline" onClick={() => onAction(item.id, "later")}>
-            Later
+            +1 month
           </Button>
         </div>
       </TableCell>

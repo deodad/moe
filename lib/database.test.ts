@@ -25,6 +25,19 @@ describe("MoeDatabase", () => {
     db.close();
   });
 
+  it("stores a date-only schedule and derives its attention bucket", () => {
+    const db = new MoeDatabase(":memory:", false);
+    const item = db.createMaintenance({ title: "Winterize outdoor faucet", dueDate: "2026-10-15" });
+
+    expect(item.dueDate).toBe("2026-10-15");
+    expect(item.dueDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(db.sqlite.prepare("SELECT due_date FROM maintenance_items WHERE id = ?").get(item.id)).toEqual({
+      due_date: "2026-10-15",
+    });
+    expect((db.sqlite.prepare("PRAGMA table_info(maintenance_items)").all() as Array<{ name: string }>).map(({ name }) => name)).not.toContain("timing");
+    db.close();
+  });
+
   it("records one linked canonical Event without overwriting the completed plan", () => {
     const db = new MoeDatabase(":memory:", false);
     const subject = db.createSubject({ name: "Road bike" });
@@ -157,6 +170,7 @@ describe("MoeDatabase", () => {
     expect(migrated.getMaintenance("legacy-maintenance")).toMatchObject({
       subjectId: "legacy-subject",
       title: "Wash filter",
+      dueDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
     });
     migrated.close();
   });

@@ -74,7 +74,7 @@ describe("persistent product state", () => {
     const item = await tools.create_maintenance.handler({
       subject_id: subject.id,
       title: "5,000-mile service",
-      timing: "this_month",
+      due_date: "2026-09-20",
       rationale: "First Toyota service interval.",
     }, context) as { id: string };
     await tools.update_maintenance.handler({
@@ -87,7 +87,7 @@ describe("persistent product state", () => {
     await tools.create_maintenance.handler({
       subject_id: subject.id,
       title: "10,000-mile service",
-      timing: "later",
+      due_date: "2027-02-15",
       rationale: "Next shop service interval.",
     }, context);
 

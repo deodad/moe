@@ -28,6 +28,7 @@ export type MaintenanceItem = {
   title: string;
   status: MaintenanceStatus;
   timing: Timing;
+  dueDate: string;
   rationale: string | null;
   data: Record<string, unknown>;
   completedAt: string | null;

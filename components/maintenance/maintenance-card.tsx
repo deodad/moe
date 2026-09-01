@@ -1,6 +1,7 @@
 "use client";
 
 import type { MaintenanceItem, Timing } from "@/lib/types";
+import { friendlyDueDate } from "@/lib/maintenance-schedule";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -26,7 +27,9 @@ export function MaintenanceCard({
           <p className="text-sm font-medium text-foreground">{item.title}</p>
           {item.subjectName && <p className="text-xs text-muted-foreground">{item.subjectName}</p>}
         </div>
-        <Badge variant="outline" className={timing[item.timing].className}>{timing[item.timing].label}</Badge>
+        <Badge variant="outline" className={timing[item.timing].className}>
+          {item.dueDate ? friendlyDueDate(item.dueDate) : timing[item.timing].label}
+        </Badge>
       </div>
       {onAction && (
         <div className="flex gap-1.5">
@@ -34,7 +37,7 @@ export function MaintenanceCard({
             Done
           </Button>
           <Button size="sm" variant="outline" onClick={() => onAction(item.id, "later")}>
-            Later
+            +1 month
           </Button>
         </div>
       )}

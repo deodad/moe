@@ -273,7 +273,7 @@ id
 subject_id?
 title
 status
-timing
+due_date (YYYY-MM-DD; canonical schedule)
 rationale?
 data
 ```

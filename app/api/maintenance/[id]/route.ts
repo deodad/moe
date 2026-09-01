@@ -1,4 +1,5 @@
 import { getDatabase } from "@/lib/database";
+import { addMonths, dateOnly } from "@/lib/maintenance-schedule";
 
 export const runtime = "nodejs";
 
@@ -9,7 +10,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const updated = body.action === "done"
     ? db.updateMaintenance(id, { status: "done" })
     : body.action === "later"
-      ? db.updateMaintenance(id, { timing: "later" })
+      ? (() => {
+          const current = db.getMaintenance(id);
+          if (!current) return null;
+          const base = current.dueDate < dateOnly() ? dateOnly() : current.dueDate;
+          return db.updateMaintenance(id, { dueDate: addMonths(base, 1) });
+        })()
       : null;
 
   if (!updated) return Response.json({ error: "Maintenance item or action not found" }, { status: 404 });

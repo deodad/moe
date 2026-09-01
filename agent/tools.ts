@@ -1,6 +1,6 @@
 import type { ToolMap } from "nanocodex";
 import type { MoeDatabase } from "@/lib/database";
-import type { MaintenanceStatus, Timing } from "@/lib/types";
+import type { MaintenanceStatus } from "@/lib/types";
 
 type Input = Record<string, unknown>;
 
@@ -45,17 +45,6 @@ function boolean(input: Input, key: string): boolean | undefined {
   return value;
 }
 
-const timingValues: Timing[] = ["overdue", "this_week", "this_month", "later"];
-
-function timing(input: Input, required = false): Timing | undefined {
-  const value = input.timing;
-  if (value === undefined && !required) return undefined;
-  if (typeof value !== "string" || !timingValues.includes(value as Timing)) {
-    throw new Error(`timing must be one of ${timingValues.join(", ")}`);
-  }
-  return value as Timing;
-}
-
 const objectSchema = (properties: Record<string, unknown>, required: string[] = []) => ({
   type: "object",
   properties,
@@ -66,7 +55,7 @@ const objectSchema = (properties: Record<string, unknown>, required: string[] = 
 const stringSchema = { type: "string" };
 const nullableStringSchema = { type: ["string", "null"] };
 const booleanSchema = { type: "boolean" };
-const timingSchema = { type: "string", enum: timingValues };
+const dateSchema = { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$", description: "Calendar date in YYYY-MM-DD format; never a timestamp." };
 const jsonObjectSchema = { type: "object", additionalProperties: true };
 
 export function createApplicationTools(db: MoeDatabase): ToolMap {
@@ -229,15 +218,15 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
       handler: (raw) => db.listMaintenance({ subjectId: string(object(raw), "subject_id", false) }),
     },
     create_maintenance: {
-      description: "Create a useful future maintenance item at the granularity the user acts on. Composite items can retain source and included operations in details.",
+      description: "Create a useful future maintenance item at the granularity the user acts on. Always choose an honest calendar due date from available evidence; do not guess from mileage, season, or an interval when its starting point is unknown. Composite items can retain source and included operations in details.",
       parameters: objectSchema({
         subject_id: stringSchema,
         title: stringSchema,
-        timing: timingSchema,
+        due_date: dateSchema,
         rationale: nullableStringSchema,
         source: nullableStringSchema,
         details: jsonObjectSchema,
-      }, ["title", "timing"]),
+      }, ["title", "due_date"]),
       handler: (raw) => {
         const input = object(raw);
         const source = nullableString(input, "source");
@@ -245,7 +234,7 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
         return db.createMaintenance({
           subjectId: string(input, "subject_id", false),
           title: string(input, "title")!,
-          timing: timing(input, true),
+          dueDate: string(input, "due_date")!,
           rationale: nullableString(input, "rationale"),
           data: {
             ...(source === undefined ? {} : { source }),
@@ -255,13 +244,13 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
       },
     },
     update_maintenance: {
-      description: "Update, defer, archive, or complete a planned maintenance item. Archive an obsolete intention without recording completion. source and details edit the plan. On completion, completion_summary, completion_source, and completion_details describe what actually happened; the application atomically records them in a linked canonical Event without overwriting the plan.",
+      description: "Update, reschedule, archive, or complete a planned maintenance item. Reschedule with a concrete due_date, never a vague bucket. Archive an obsolete intention without recording completion. source and details edit the plan. On completion, completion_summary, completion_source, and completion_details describe what actually happened; the application atomically records them in a linked canonical Event without overwriting the plan.",
       parameters: objectSchema({
         id: stringSchema,
         subject_id: nullableStringSchema,
         title: stringSchema,
         status: { type: "string", enum: ["active", "done", "archived"] },
-        timing: timingSchema,
+        due_date: dateSchema,
         rationale: nullableStringSchema,
         occurred_at: stringSchema,
         source: nullableStringSchema,
@@ -294,7 +283,7 @@ export function createApplicationTools(db: MoeDatabase): ToolMap {
           subjectId: nullableString(input, "subject_id"),
           title: string(input, "title", false),
           status,
-          timing: timing(input),
+          dueDate: string(input, "due_date", false),
           rationale: nullableString(input, "rationale"),
           occurredAt: string(input, "occurred_at", false),
           data,
