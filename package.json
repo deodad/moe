@@ -2,6 +2,7 @@
   "name": "moe",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.8.0",
   "type": "module",
   "engines": {
     "node": ">=22.13.0"
@@ -39,6 +40,7 @@
     "@types/ws": "^8.18.1",
     "eslint": "^9.35.0",
     "eslint-config-next": "16.3.3",
+    "frog": "^1.1.0",
     "tailwindcss": "^4.1.12",
     "tsx": "^4.23.13",
     "typescript": "^5.9.2",

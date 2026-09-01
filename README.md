@@ -5,12 +5,13 @@ A local learning prototype for a personal agent that helps keep what matters goi
 ## Requirements
 
 - Node.js 22.13 or newer (required by Nanocodex)
+- pnpm 10.8.0
 - An OpenAI API key with access to the supported GPT-5.6 model family
 
 ## Setup
 
 ```sh
-npm install
+pnpm install
 cp .env.example .env.local
 ```
 
@@ -29,7 +30,7 @@ Environment variables:
 Start the application:
 
 ```sh
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). Local state is stored in `data/moe.db` and survives page reloads and server restarts. Delete that file when you intentionally want to restore the believable seed data.
@@ -50,11 +51,11 @@ The access gate is disabled during local development. In production it fails clo
 ## Verify
 
 ```sh
-npm run lint
-npm run typecheck
-npm test
-npm run build
-npm run test:e2e
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm test:e2e
 ```
 
 The end-to-end suite starts an isolated local database and uses the installed Google Chrome at desktop and phone viewport sizes.

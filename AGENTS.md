@@ -1,5 +1,11 @@
 # Agent instructions
 
+## Friction logging
+
+- Log papercuts and friction (tooling, docs, APIs, tests, conventions) as you hit them with `pnpm frog log`.
+- Do not add global, system, or internal friction.
+- Run `pnpm frog list` first to see what is already known.
+
 Read `vision.md` and `prototype.md` before making significant product or implementation decisions.
 
 This is a disposable learning prototype. Prefer the simplest implementation that lets us test the product, keep important code obvious, and avoid premature abstraction.

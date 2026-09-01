@@ -34,9 +34,8 @@ class MoeAgent(BaseAgent):
         with tempfile.TemporaryDirectory(prefix="moe-harbor-") as temp_dir:
             result_path = Path(temp_dir) / "eval-result.json"
             process = await asyncio.create_subprocess_exec(
-                "npm",
+                "pnpm",
                 "exec",
-                "--",
                 "tsx",
                 "evals/harbor/run-case.mts",
                 "--model",
