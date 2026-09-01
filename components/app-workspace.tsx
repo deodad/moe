@@ -397,7 +397,7 @@ export function AppWorkspace({ initialState }: { initialState: AppState }) {
         {(view === "chat" || view === "subjects") && (
           <div className="flex min-h-0 flex-1">
             {view === "subjects" && selectedSubject && (
-              <aside className="hidden w-[340px] shrink-0 gap-3 bg-muted/30 p-3 lg:flex lg:min-h-0 lg:flex-col">
+              <aside className="hidden w-[340px] shrink-0 gap-3 p-4 lg:flex lg:min-h-0 lg:flex-col">
                 <div>
                   <label className="mb-1.5 block font-mono text-[0.68rem] tracking-wide text-muted-foreground uppercase" htmlFor="subject-switcher">
                     Inventory
