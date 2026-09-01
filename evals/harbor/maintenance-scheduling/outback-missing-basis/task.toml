@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/maintenance-scheduling-outback-missing-basis"
+version = "0.1.0"
+description = "Preserve a hybrid mileage/time interval without fabricating a date."
+keywords = ["moe", "maintenance", "scheduling", "condition", "vehicle"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 180.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

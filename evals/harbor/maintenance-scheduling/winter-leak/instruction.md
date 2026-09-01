@@ -1,0 +1,1 @@
+{"case":"maintenance-scheduling-winter-leak","initialSubjects":[{"key":"house","name":"House","category":"Home","attributes":{"location":"Chicago, Illinois"}}],"turns":["The outdoor faucet only leaks during winter. Keep a reminder to deal with it before the first freeze, but don't pretend it needs doing this week."]}

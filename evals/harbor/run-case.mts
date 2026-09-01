@@ -28,6 +28,8 @@ type EvalCase = {
     subjectKey?: string;
     title: string;
     timing?: "overdue" | "this_week" | "this_month" | "later";
+    due?: { date?: string; condition?: string };
+    checkOn?: string | null;
     rationale?: string | null;
     data?: Record<string, unknown>;
   }>;

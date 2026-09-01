@@ -24,6 +24,7 @@ describe("maintenance scheduling", () => {
   it("uses check-on dates for attention without claiming the work is due", () => {
     expect(timingForMaintenance({ condition: "Before the first freeze" }, "2026-09-22", "2026-09-01")).toBe("this_month");
     expect(maintenanceScheduleLabel({ condition: "Before the first freeze" }, "2026-09-22", "2026-08-31")).toBe("Check in 3 weeks");
+    expect(maintenanceScheduleLabel({ condition: "Before the first freeze" }, "2026-10-01", "2026-09-01")).toBe("Check next month");
     expect(timingForMaintenance({ condition: "When visibly worn" }, null, "2026-08-31")).toBe("watching");
     expect(maintenanceScheduleLabel({ condition: "When visibly worn" }, null, "2026-08-31")).toBe("Watching");
   });

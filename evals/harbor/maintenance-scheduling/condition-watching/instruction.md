@@ -1,0 +1,1 @@
+{"case":"maintenance-scheduling-condition-watching","initialSubjects":[{"key":"outback","name":"2024 Subaru Outback","category":"Vehicle"}],"turns":["Keep a maintenance item to replace the tires when tread depth reaches 4/32 inch. I don't want a made-up replacement date or a separate inspection reminder."]}

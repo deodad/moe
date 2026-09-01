@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/maintenance-scheduling-condition-watching"
+version = "0.1.0"
+description = "Leave a condition-only replacement in Watching without a fake deadline."
+keywords = ["moe", "maintenance", "scheduling", "watching", "condition"]
+
+[metadata]
+category = "product-agent"
+difficulty = "easy"
+
+[agent]
+timeout_sec = 180.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512

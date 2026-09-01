@@ -69,6 +69,8 @@ export function maintenanceScheduleLabel(due: DueCriteria, checkOn: string | nul
   if (label === "Tomorrow") return "Check tomorrow";
   if (label === "This week") return "Check this week";
   if (label === "Next week") return "Check next week";
+  if (label === "This month") return "Check this month";
+  if (label === "Next month") return "Check next month";
   if (label === "Overdue") return "Check overdue";
   return `Check in ${label}`;
 }
@@ -85,6 +87,9 @@ export function friendlyDueDate(dueDate: string, today = dateOnly()) {
   const weekOffset = Math.floor((due.getTime() - parseDate(startOfWeek).getTime()) / (7 * DAY_MS));
   if (weekOffset === 0) return "This week";
   if (weekOffset === 1) return "Next week";
+  const calendarMonths = (due.getUTCFullYear() - current.getUTCFullYear()) * 12 + due.getUTCMonth() - current.getUTCMonth();
+  if (calendarMonths === 0) return "This month";
+  if (calendarMonths === 1 && days >= 28) return "Next month";
   if (days < 56) return `${Math.round(days / 7)} weeks`;
 
   const months = Math.round(days / 30.4375);

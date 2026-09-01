@@ -36,9 +36,11 @@ export function MaintenanceRow({
   return (
     <TableRow>
       <TableCell className="whitespace-nowrap align-top">
-        <Badge variant="outline" className={timing[item.timing].className}>
-          {item.due ? maintenanceScheduleLabel(item.due, item.checkOn) : timing[item.timing].label}
-        </Badge>
+        {item.timing !== "watching" && (
+          <Badge variant="outline" className={timing[item.timing].className}>
+            {item.due ? maintenanceScheduleLabel(item.due, item.checkOn) : timing[item.timing].label}
+          </Badge>
+        )}
       </TableCell>
       <TableCell className="align-top whitespace-normal">
         <p className="font-medium text-foreground">{item.title}</p>

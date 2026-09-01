@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[task]
+name = "moe/maintenance-scheduling-winter-leak"
+version = "0.1.0"
+description = "Keep winter-only work conditional instead of calling it due now."
+keywords = ["moe", "maintenance", "scheduling", "seasonal", "home"]
+
+[metadata]
+category = "product-agent"
+difficulty = "medium"
+
+[agent]
+timeout_sec = 180.0
+
+[verifier]
+timeout_sec = 30.0
+
+[environment]
+network_mode = "no-network"
+cpus = 1
+memory_mb = 512
